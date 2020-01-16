@@ -1,0 +1,16 @@
+Hej {liu_id}!
+Vi här på LitheKod undrar om du fortfarande vill vara en medlem i vår förening.
+Om du vill fortsätta vara en medlem så klicka på den övre länken nedan innan {date}. Om du inte klickar på länken innan {date} kommer du inte längre vara medlem och din information kommer raderas.
+Om du <b>inte<b> vill fortsätta vara medlem i LitheKod så klicka på den undre länken nedan. Observera att det inte går att ångra detta och för att bli medlem igen kommer du får betala intro-avgiften igen. 
+
+Jag vill fortfarande vara medlem: {active_link}
+Jag vill inte vara medlem, ta bort min information (OBS: detta kan inte ångras och om du vill bli medlem igen kommer du behöva betala itro-avgiften igen): {delete_link}
+
+
+Hello {liu_id}!
+We here at LitheKod are wondering if you still want to be a mamber in our organization.
+If you want to continue click on the top link below before {date}. If you do not click on the link before {date} you will no longer be a member and your information will be deleted.
+If you <b>do not<b> want to continue being a member of LitheKod click on the second link below. Observe that you cannot undo this and to become a member again you have to pay the intro-fee again.
+
+I still want to be a member: {active_link}
+I do not want to be a member, remove my information (OBS: this cannot be undone and if you want to become a member again you will have to pay the intro-fee again): {delete-link}
