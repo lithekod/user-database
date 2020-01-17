@@ -1,3 +1,4 @@
+
 Hej {first_name}!
 Vi här på LitheKod undrar om du fortfarande vill vara en medlem i vår förening.
 Om du vill fortsätta vara en medlem så klicka på den övre länken nedan innan {date}. Om du inte klickar på länken innan {date} kommer du inte längre vara medlem och din information kommer raderas.
