@@ -1,10 +1,14 @@
 import uuid
 import sqlite3
 
+from os import urandom
+
 from flask import Flask
 
 app = Flask(__name__)
 db = sqlite3.connect(':memory:')
+
+ACTIONS = ["SHOW", "RENEW", "DELETE"]
 
 def create_database():
 
@@ -38,8 +42,7 @@ def create_database():
         """
     )
 
-    actions = [("SHOW",), ("RENEW",), ("DELETE",)]
-    db.executemany("INSERT INTO action VALUES (?)", actions)
+    db.executemany("INSERT INTO action VALUES (?)", [(i,) for i in ACTIONS])
 
     """Link table
     This table spcifies the active links which can be accessed by a member.
@@ -53,7 +56,8 @@ def create_database():
         (
             member_id  VARCHAR(10)  NOT NULL,
             action_id  VARCHAR(10)  NOT NULL,
-            url        VARCHAR(64)  NOT NULL,
+            url        VARCHAR(32)  UNIQUE NOT NULL,
+            created    TIME         NOT NULL,
             PRIMARY KEY (member_id, action_id),
             FOREIGN KEY (member_id) REFERENCES member(id),
             FOREIGN KEY (action_id) REFERENCES action(id)
@@ -85,23 +89,48 @@ def is_id(liuid):
 
 def add_member(liuid, name, email):
 
-    liuid = liuid.to_lower()
+    liuid = liuid.lower()
 
-    assert is_id(liuid), "Invalid id"
+    if not is_id(liuid):
+        return "Invalid id"
 
     db.execute("INSERT INTO member VALUES\
             (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)",
         (liuid, name, email, True))
 
-# Experimental
-def add_link(member_id):
-    db.execute("INSERT INTO link VALUES (?, ?, ?)",
-        (uuid.uuid4().bytes, 0, member_id))
+    return "Success"
+
+
+def add_link(member_id, action):
+
+    if action not in ACTIONS:
+        return "Invalid action"
+
+    url_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    url = "{}_".format(action)
+
+    while len(url) < 32:
+        char_index = ord(urandom(1))
+        if char_index < len(url_chars):
+            url += url_chars[char_index]
+
+
+    db.execute("INSERT INTO link VALUES \
+            (?, ?, ?, CURRENT_TIMESTAMP)", (member_id, action, url))
+
+    return "Success"
+
 
 # Experimental
 def delete_member(member_id):
-    db.execute("DELETE FROM member WHERE id = ?", (member_id,))
+    db.execute("DELETE FROM member WHERE id=?", (member_id,))
 
 @app.route("/<link>")
 def handle_link(link):
+
+    link = db.execute("SELECT * FROM link WHERE ulr=?", (link,)).fetchone()
+
+    if link is None:
+        return "404"
+
     return link
