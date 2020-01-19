@@ -3,10 +3,12 @@ import sqlite3
 
 from os import urandom
 
-from flask import Flask
+from flask import Flask, jsonify
+
+DATABASE_PATH = "/tmp/test.db"
 
 app = Flask(__name__)
-db = sqlite3.connect(':memory:')
+db = sqlite3.connect(DATABASE_PATH)
 
 ACTIONS = ["SHOW", "RENEW", "DELETE"]
 
@@ -19,18 +21,22 @@ def create_database():
         """
         CREATE TABLE member
         (
-            id            VARCHAR(10)  NOT NULL,
-            name          VARCHAR(64)  NOT NULL,
-            email         VARCHAR(64)  NOT NULL,
-            joined        TIME         NOT NULL,
-            renewed       TIME         NOT NULL,
-            receive_info  BOOLEAN      NOT NULL,
+            id             VARCHAR(10)  NOT NULL,
+            name           VARCHAR(64)  NOT NULL,
+            email          VARCHAR(64)  NOT NULL,
+            joined         TIME         NOT NULL,
+            renewed        TIME         NOT NULL,
+            receive_email  BOOLEAN      NOT NULL,
             PRIMARY KEY (id)
         )
         """
     )
 
     """Action table
+    The id specifies what a action should do:
+        DELETE - Removes a member from the database.
+        RENEW - Sets the renewed status of the member to the current date.
+        SHOW - Provides a json string with one of the members information.
     """
     db.execute(
         """
@@ -46,9 +52,6 @@ def create_database():
 
     """Link table
     This table spcifies the active links which can be accessed by a member.
-    The type specifies what a link should do:
-        0 - Removes the member associated with member_id from the database.
-        1 - Sets the active status of the member associated with member_id to 1.
     """
     db.execute(
         """
@@ -64,6 +67,8 @@ def create_database():
         )
         """
     )
+
+    db.commit()
 
 
 def check_pnr(l):
@@ -97,6 +102,7 @@ def add_member(liuid, name, email):
     db.execute("INSERT INTO member VALUES\
             (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)",
         (liuid, name, email, True))
+    db.commit()
 
     return "Success"
 
@@ -114,9 +120,9 @@ def add_link(member_id, action):
         if char_index < len(url_chars):
             url += url_chars[char_index]
 
-
     db.execute("INSERT INTO link VALUES \
             (?, ?, ?, CURRENT_TIMESTAMP)", (member_id, action, url))
+    db.commit()
 
     return "Success"
 
@@ -124,13 +130,35 @@ def add_link(member_id, action):
 # Experimental
 def delete_member(member_id):
     db.execute("DELETE FROM member WHERE id=?", (member_id,))
+    db.commit()
 
 @app.route("/<link>")
 def handle_link(link):
 
-    link = db.execute("SELECT * FROM link WHERE ulr=?", (link,)).fetchone()
+    db = sqlite3.connect(DATABASE_PATH)
+    link = db.execute("SELECT * FROM link WHERE url=?", (link,)).fetchone()
 
     if link is None:
         return "404"
 
-    return link
+    member_id, action_id, url, created  = link
+
+    if action_id == "SHOW":
+        member = db.execute("SELECT * FROM member WHERE id=?", (member_id,)).fetchone()
+        id, name, email, joined, renewed, receive_email = member
+        return jsonify({
+            "id": id,
+            "name": name,
+            "email": email,
+            "joined": joined,
+            "renewed": renewed,
+            "receive_email": receive_email
+        })
+
+    return action_id
+
+# Test
+def test_database():
+    add_member("erima882", "Erik Mattfolk", "erima882@student.liu.se")
+    add_link("erima882", "SHOW")
+
