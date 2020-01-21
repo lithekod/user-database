@@ -3,16 +3,19 @@ import sqlite3
 
 from os import urandom
 
-from flask import Flask, jsonify
+from flask import Flask
+from flask import jsonify
+from flask import request
 
 DATABASE_PATH = "/tmp/test.db"
+ACTIONS = ["SHOW", "RENEW", "DELETE"]
+ADMIN_PASSWORD = "dev"
 
 app = Flask(__name__)
-db = sqlite3.connect(DATABASE_PATH)
-
-ACTIONS = ["SHOW", "RENEW", "DELETE"]
 
 def create_database():
+
+    db = sqlite3.connect(DATABASE_PATH)
 
     """Member table
     This table contains all of the information we store on members.
@@ -21,13 +24,12 @@ def create_database():
         """
         CREATE TABLE member
         (
-            id             VARCHAR(10)  NOT NULL,
+            id             VARCHAR(10)  PRIMARY KEY,
             name           VARCHAR(64)  NOT NULL,
             email          VARCHAR(64)  NOT NULL,
             joined         TIME         NOT NULL,
             renewed        TIME         NOT NULL,
-            receive_email  BOOLEAN      NOT NULL,
-            PRIMARY KEY (id)
+            receive_email  BOOLEAN      NOT NULL
         )
         """
     )
@@ -42,8 +44,7 @@ def create_database():
         """
         CREATE TABLE action
         (
-            id  VARCHAR(10),
-            PRIMARY KEY (id)
+            id  VARCHAR(10) PRIMARY KEY
         )
         """
     )
@@ -69,6 +70,7 @@ def create_database():
     )
 
     db.commit()
+    db.close()
 
 
 def check_pnr(l):
@@ -99,12 +101,14 @@ def add_member(liuid, name, email):
     if not is_id(liuid):
         return "Invalid id"
 
+    db = sqlite3.connect(DATABASE_PATH)
     db.execute("INSERT INTO member VALUES\
             (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)",
         (liuid, name, email, True))
     db.commit()
+    db.close()
 
-    return "Success"
+    return f"Successfully added user with id: {liuid}"
 
 
 def add_link(member_id, action):
@@ -120,11 +124,13 @@ def add_link(member_id, action):
         if char_index < len(url_chars):
             url += url_chars[char_index]
 
+    db = sqlite3.connect(DATABASE_PATH)
     db.execute("INSERT INTO link VALUES \
             (?, ?, ?, CURRENT_TIMESTAMP)", (member_id, action, url))
     db.commit()
+    db.close()
 
-    return "Success"
+    return f"Successfully added {action} link to id: {member_id}"
 
 
 @app.route("/<link>")
@@ -141,8 +147,9 @@ def handle_link(link):
     member = db.execute("SELECT * FROM member WHERE id=?", (member_id,)).fetchone()
     liuid, name, email, joined, renewed, receive_email = member
 
+    ret = "Unknown link"
     if action_id == "SHOW":
-        return jsonify({
+        ret = jsonify({
             "id": liuid,
             "name": name,
             "email": email,
@@ -157,17 +164,29 @@ def handle_link(link):
         db.execute("DELETE FROM link WHERE member_id=? AND action_id=?",
                 (liuid, action_id))
         db.commit()
-
-        return "Your membership has been renewed!"
+        ret = "Your membership has been renewed!"
 
     elif action_id == "DELETE":
         db.execute("DELETE FROM link WHERE member_id=?", (liuid,))
         db.execute("DELETE FROM member WHERE id=?", (liuid,))
         db.commit()
+        ret = "You have now left LiTHe kod. We hope you enjoyed your stay!"
 
-        return "You have now left LiTHe kod. We hope you enjoyed your stay!"
+    db.close()
 
-    return "Unknown link"
+    return ret
+
+@app.route("/add_member/")
+def handle_add_member():
+    if request.authorization["password"] != ADMIN_PASSWORD:
+        return "Unauthorized"
+
+    args = request.args
+    for required_argument in ["id", "name", "email"]:
+        if required_argument not in args:
+            return f"No '{required_argument}' specifed"
+
+    return add_member(args["id"], args["name"], args["email"])
 
 # Test
 def test_database():
