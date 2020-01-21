@@ -127,11 +127,6 @@ def add_link(member_id, action):
     return "Success"
 
 
-# Experimental
-def delete_member(member_id):
-    db.execute("DELETE FROM member WHERE id=?", (member_id,))
-    db.commit()
-
 @app.route("/<link>")
 def handle_link(link):
 
@@ -143,11 +138,12 @@ def handle_link(link):
 
     member_id, action_id, url, created  = link
 
+    member = db.execute("SELECT * FROM member WHERE id=?", (member_id,)).fetchone()
+    liuid, name, email, joined, renewed, receive_email = member
+
     if action_id == "SHOW":
-        member = db.execute("SELECT * FROM member WHERE id=?", (member_id,)).fetchone()
-        id, name, email, joined, renewed, receive_email = member
         return jsonify({
-            "id": id,
+            "id": liuid,
             "name": name,
             "email": email,
             "joined": joined,
@@ -155,10 +151,27 @@ def handle_link(link):
             "receive_email": receive_email
         })
 
-    return action_id
+    elif action_id == "RENEW":
+        db.execute("UPDATE member SET renewed=CURRENT_TIMESTAMP WHERE id=?",
+                (liuid,))
+        db.execute("DELETE FROM link WHERE member_id=? AND action_id=?",
+                (liuid, action_id))
+        db.commit()
+
+        return "Your membership has been renewed!"
+
+    elif action_id == "DELETE":
+        db.execute("DELETE FROM link WHERE member_id=?", (liuid,))
+        db.execute("DELETE FROM member WHERE id=?", (liuid,))
+        db.commit()
+
+        return "You have now left LiTHe kod. We hope you enjoyed your stay!"
+
+    return "Unknown link"
 
 # Test
 def test_database():
+    create_database()
     add_member("erima882", "Erik Mattfolk", "erima882@student.liu.se")
     add_link("erima882", "SHOW")
 
