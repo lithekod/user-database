@@ -188,6 +188,20 @@ def handle_add_member():
 
     return add_member(args["id"], args["name"], args["email"])
 
+@app.route("/metrics/")
+def get_metrics():
+    if request.authorization["password"] != ADMIN_PASSWORD:
+        return "Unauthorized"
+
+    db = sqlite3.connect(DATABASE_PATH)
+    members = db.execute("SELECT count(*) FROM member").fetchone()[0]
+    active_members = db.execute("SELECT count(*) FROM member\
+            WHERE strftime('%s', CURRENT_TIMESTAMP)\
+            - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
+
+    return f"members: {members}\nactive_members: {active_members}"
+
+
 # Test
 def test_database():
     create_database()
