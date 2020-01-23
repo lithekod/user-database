@@ -2,6 +2,7 @@ import uuid
 import sqlite3
 
 from os import urandom
+from datetime import datetime
 
 from flask import Flask
 from flask import jsonify
@@ -94,17 +95,25 @@ def is_id(liuid):
             (len(liuid) == 10 and is_int(liuid) and check_pnr(l))
 
 
-def add_member(liuid, name, email):
+def add_member(liuid, name, email, joined, receive_email):
 
     liuid = liuid.lower()
 
     if not is_id(liuid):
         return "Invalid id"
 
+    try:
+        joined = datetime.strptime(joined, "%Y-%m-%d")
+    except ValueError:
+        return "joined has to be in the form %Y-%m-%d"
+
+    if receive_email not in ["0", "1"]:
+        return "receive_email has to be 0 or 1"
+
     db = sqlite3.connect(DATABASE_PATH)
     db.execute("INSERT INTO member VALUES\
-            (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)",
-        (liuid, name, email, True))
+            (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
+        (liuid, name, email, joined, receive_email))
     db.commit()
     db.close()
 
@@ -211,11 +220,12 @@ def handle_add_member():
         return "Unauthorized"
 
     args = request.args
-    for required_argument in ["id", "name", "email"]:
+    required_arguments = ["id", "name", "email", "joined", "receive_email"]
+    for required_argument in required_arguments:
         if required_argument not in args:
             return f"No '{required_argument}' specifed"
 
-    return add_member(args["id"], args["name"], args["email"])
+    return add_member(*(args[arg] for arg in required_arguments))
 
 
 @app.route("/metrics/")
