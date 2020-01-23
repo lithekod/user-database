@@ -133,6 +133,34 @@ def add_link(member_id, action):
     return f"Successfully added {action} link to id: {member_id}"
 
 
+def get_links():
+
+    db = sqlite3.connect(DATABASE_PATH)
+    table = {}
+    for liuid, link in db.execute("SELECT member_id, url FROM link").fetchall():
+        if liuid not in table:
+            table[liuid] = {}
+        table[liuid][link[:link.find("_")]] = link
+    db.close()
+
+    return table
+
+
+def generate_links():
+
+    db = sqlite3.connect(DATABASE_PATH)
+    db.execute("DELETE FROM link")
+    ids = db.execute("SELECT id from member").fetchall()
+    db.commit()
+    db.close()
+
+    for (liuid,) in ids:
+        for action in ACTIONS:
+            add_link(liuid, action)
+
+    return get_links()
+
+
 @app.route("/<link>")
 def handle_link(link):
 
@@ -176,6 +204,7 @@ def handle_link(link):
 
     return ret
 
+
 @app.route("/add_member/")
 def handle_add_member():
     if request.authorization["password"] != ADMIN_PASSWORD:
@@ -187,6 +216,7 @@ def handle_add_member():
             return f"No '{required_argument}' specifed"
 
     return add_member(args["id"], args["name"], args["email"])
+
 
 @app.route("/metrics/")
 def get_metrics():
