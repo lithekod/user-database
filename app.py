@@ -1,8 +1,8 @@
 import uuid
 import sqlite3
+import datetime
 
 from os import urandom
-from datetime import datetime
 
 from flask import Flask
 from flask import jsonify
@@ -15,6 +15,10 @@ ADMIN_PASSWORD = "dev"
 app = Flask(__name__)
 
 def create_database():
+    """
+    Construct the tables in the database.
+    Call this function once when setting up the server.
+    """
 
     db = sqlite3.connect(DATABASE_PATH)
 
@@ -74,15 +78,8 @@ def create_database():
     db.close()
 
 
-def check_pnr(l):
-    l = [int(i) for i in l]
-    ctrl = l.pop()
-    for i in range(0, len(l), 2): l[i] *= 2
-    s = sum([sum([int(j) for j in str(i)]) for i in l])
-    return (s + ctrl) % 10 == 0
-
-
 def is_int(string):
+    """ Test if a string can be interpreted as an int. """
     try:
         int(string)
         return True
@@ -90,24 +87,49 @@ def is_int(string):
         return False
 
 
-def is_id(liuid):
-    return (len(liuid) <= 8 and liuid[:-3].islower() and is_int(liuid[-3:])) or \
-            (len(liuid) == 10 and is_int(liuid) and check_pnr(l))
+def is_pnr(l):
+    """
+    Test if a sequence l is a valid swedish personal number.
+    TDDE23 labb 2 <3
+    """
+    if len(l) != 10 or not is_int(id): return False
+    l = [int(i) for i in l]
+    ctrl = l.pop()
+    for i in range(0, len(l), 2): l[i] *= 2
+    s = sum([sum([int(j) for j in str(i)]) for i in l])
+    return (s + ctrl) % 10 == 0
+
+
+def is_liuid(liuid):
+    """ Test if a string is a liuid. """
+    return len(liuid) <= 8 and liuid[:-3].islower() and is_int(liuid[-3:])
+
+
+def is_id(id):
+    """ Test if id is either a liuid or a swedish personal number. """
+    return is_liuid(id) or is_pnr(l)
 
 
 def add_member(liuid, name, email, joined, receive_email):
+    """
+    Add a member to the database.
+    All arguments has to be provided and properly formatted.
+    """
 
     liuid = liuid.lower()
 
     if not is_id(liuid):
         return "Invalid id"
 
+    if "@" not in email:
+        return "Invalid email address"
+
     try:
-        joined = datetime.strptime(joined, "%Y-%m-%d")
+        joined = datetime.datetime.strptime(joined, "%Y-%m-%d")
     except ValueError:
         return "joined has to be in the form %Y-%m-%d"
 
-    if receive_email not in ["0", "1"]:
+    if receive_email not in ["0", "1", 0, 1]:
         return "receive_email has to be 0 or 1"
 
     db = sqlite3.connect(DATABASE_PATH)
@@ -121,6 +143,10 @@ def add_member(liuid, name, email, joined, receive_email):
 
 
 def add_link(member_id, action):
+    """
+    Add a link to the database that when accessed,
+    performs action on the member with corresponding member_id.
+    """
 
     if action not in ACTIONS:
         return "Invalid action"
@@ -143,6 +169,19 @@ def add_link(member_id, action):
 
 
 def get_links():
+    """
+    Get a dict with all of the links currently in the database.
+    The dict is formatted in the following way:
+    {
+        "liuid123": {
+            "ACTION": "ACTION_tehxrkAOEuhrc9238"
+                .
+                .
+        }
+        .
+        .
+    }
+    """
 
     db = sqlite3.connect(DATABASE_PATH)
     table = {}
@@ -156,6 +195,10 @@ def get_links():
 
 
 def generate_links():
+    """
+    Remove old links and generate new links for all users.
+    Every user gets one link for each ACTION.
+    """
 
     db = sqlite3.connect(DATABASE_PATH)
     db.execute("DELETE FROM link")
@@ -172,6 +215,10 @@ def generate_links():
 
 @app.route("/<link>")
 def handle_link(link):
+    """
+    Handle a link and perform action related to the link.
+    Possible actions can be found in ACTIONS.
+    """
 
     db = sqlite3.connect(DATABASE_PATH)
     link = db.execute("SELECT * FROM link WHERE url=?", (link,)).fetchone()
@@ -185,6 +232,7 @@ def handle_link(link):
     liuid, name, email, joined, renewed, receive_email = member
 
     ret = "Unknown link"
+
     if action_id == "SHOW":
         ret = jsonify({
             "id": liuid,
@@ -216,20 +264,42 @@ def handle_link(link):
 
 @app.route("/add_member/")
 def handle_add_member():
+    """
+    Handle adding new members to the database.
+    Not all arguments has to be specified in order for a user to be added.
+    """
     if request.authorization["password"] != ADMIN_PASSWORD:
         return "Unauthorized"
 
+    required_arguments = ["id", "name"]
+    optional_arguments = ["email", "joined", "receive_email"]
+
     args = request.args
-    required_arguments = ["id", "name", "email", "joined", "receive_email"]
+    member_args = []
+
     for required_argument in required_arguments:
         if required_argument not in args:
             return f"No '{required_argument}' specifed"
+        else:
+            member_args.append(args[required_argument])
 
-    return add_member(*(args[arg] for arg in required_arguments))
+    optional_default = ["{}@student.liu.se".format(args["id"]),
+            datetime.date.today().isoformat(), "1"]
+    for optional_argument, default in zip(optional_arguments, optional_default):
+        if optional_argument not in args:
+            member_args.append(default)
+        else:
+            member_args.append(args[optional_argument])
+
+    return add_member(*member_args)
 
 
 @app.route("/metrics/")
 def get_metrics():
+    """
+    Return information about the database.
+    Shows amount of members and active members for now.
+    """
     if request.authorization["password"] != ADMIN_PASSWORD:
         return "Unauthorized"
 
@@ -247,4 +317,3 @@ def test_database():
     create_database()
     add_member("erima882", "Erik Mattfolk", "erima882@student.liu.se")
     add_link("erima882", "SHOW")
-
