@@ -5,10 +5,10 @@ from email.mime.multipart import MIMEMultipart
 sender_email = "dev@mail.com"
 password = "dev"
 
-def send_mail(receivers, html):
+def send_mail(receivers, subject, html):
     for liu_id, name, receiver_email, joined, renewed, receive_info in receivers:
         message = MIMEMultipart("alternative")
-        message["Subject"] = "multipart test"
+        message["Subject"] = subject
         message["From"] = sender_email
         message["To"] = receiver_email
 
