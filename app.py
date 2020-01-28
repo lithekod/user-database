@@ -3,14 +3,21 @@ import sqlite3
 import datetime
 
 from os import urandom
+from os import environ
 
 from flask import Flask
 from flask import jsonify
 from flask import request
 
-DATABASE_PATH = "/tmp/test.db"
 ACTIONS = ["SHOW", "RENEW", "DELETE"]
-ADMIN_PASSWORD = "dev"
+
+DATABASE_PATH = environ.get("DATABASE_PATH")
+if not DATABASE_PATH:
+    raise ValueError("No DATABASE_PATH set in env")
+
+SECRET_KEY = environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("No SECRET_KEY set in env")
 
 app = Flask(__name__)
 
@@ -268,7 +275,7 @@ def handle_add_member():
     Handle adding new members to the database.
     Not all arguments has to be specified in order for a user to be added.
     """
-    if request.authorization["password"] != ADMIN_PASSWORD:
+    if request.authorization["password"] != SECRET_KEY:
         return "Unauthorized"
 
     required_arguments = ["id", "name"]
@@ -300,7 +307,7 @@ def get_metrics():
     Return information about the database.
     Shows amount of members and active members for now.
     """
-    if request.authorization["password"] != ADMIN_PASSWORD:
+    if request.authorization["password"] != SECRET_KEY:
         return "Unauthorized"
 
     db = sqlite3.connect(DATABASE_PATH)
