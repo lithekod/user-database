@@ -5,14 +5,17 @@ from email.mime.multipart import MIMEMultipart
 sender_email = "dev@mail.com"
 password = "dev"
 
-def send_mail(receivers, subject, html):
+def send_mail(receivers, links, subject, html):
     for liu_id, name, receiver_email, joined, renewed, receive_info in receivers:
+        delete_link = links[liu_id]["DELETE"]
+        renew_link = links[liu_id]["RENEW"]
+        show_link = links[liu_id]["SHOW"]
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        html = html.format(liu_id=liu_id, name=name, email=receiver_email, joined=joined, renewed=renewed, receive_info=receive_info)
+        html = html.format(liu_id=liu_id, name=name, email=receiver_email, joined=joined, renewed=renewed, receive_info=receive_info, delete_link=delete_link, renew_link=renew_link, show_link=show_link)
 
         part2 = MIMEText(html, "html")
         message.attach(part2)
