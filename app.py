@@ -1,12 +1,26 @@
 import uuid
 import sqlite3
+import datetime
+
+from os import urandom
 
 from flask import Flask
+from flask import jsonify
+from flask import request
+
+DATABASE_PATH = "/tmp/test.db"
+ACTIONS = ["SHOW", "RENEW", "DELETE"]
+ADMIN_PASSWORD = "dev"
 
 app = Flask(__name__)
-db = sqlite3.connect(':memory:')
 
 def create_database():
+    """
+    Construct the tables in the database.
+    Call this function once when setting up the server.
+    """
+
+    db = sqlite3.connect(DATABASE_PATH)
 
     """Member table
     This table contains all of the information we store on members.
@@ -15,37 +29,35 @@ def create_database():
         """
         CREATE TABLE member
         (
-            id            VARCHAR(10)  NOT NULL,
-            name          VARCHAR(64)  NOT NULL,
-            email         VARCHAR(64)  NOT NULL,
-            joined        TIME         NOT NULL,
-            renewed       TIME         NOT NULL,
-            receive_info  BOOLEAN      NOT NULL,
-            PRIMARY KEY (id)
+            id             VARCHAR(10)  PRIMARY KEY,
+            name           VARCHAR(64)  NOT NULL,
+            email          VARCHAR(64)  NOT NULL,
+            joined         TIME         NOT NULL,
+            renewed        TIME         NOT NULL,
+            receive_email  BOOLEAN      NOT NULL
         )
         """
     )
 
     """Action table
+    The id specifies what a action should do:
+        DELETE - Removes a member from the database.
+        RENEW - Sets the renewed status of the member to the current date.
+        SHOW - Provides a json string with one of the members information.
     """
     db.execute(
         """
         CREATE TABLE action
         (
-            id  VARCHAR(10),
-            PRIMARY KEY (id)
+            id  VARCHAR(10) PRIMARY KEY
         )
         """
     )
 
-    actions = [("SHOW",), ("RENEW",), ("DELETE",)]
-    db.executemany("INSERT INTO action VALUES (?)", actions)
+    db.executemany("INSERT INTO action VALUES (?)", [(i,) for i in ACTIONS])
 
     """Link table
     This table spcifies the active links which can be accessed by a member.
-    The type specifies what a link should do:
-        0 - Removes the member associated with member_id from the database.
-        1 - Sets the active status of the member associated with member_id to 1.
     """
     db.execute(
         """
@@ -53,7 +65,8 @@ def create_database():
         (
             member_id  VARCHAR(10)  NOT NULL,
             action_id  VARCHAR(10)  NOT NULL,
-            url        VARCHAR(64)  NOT NULL,
+            url        VARCHAR(32)  UNIQUE NOT NULL,
+            created    TIME         NOT NULL,
             PRIMARY KEY (member_id, action_id),
             FOREIGN KEY (member_id) REFERENCES member(id),
             FOREIGN KEY (action_id) REFERENCES action(id)
@@ -61,16 +74,12 @@ def create_database():
         """
     )
 
-
-def check_pnr(l):
-    l = [int(i) for i in l]
-    ctrl = l.pop()
-    for i in range(0, len(l), 2): l[i] *= 2
-    s = sum([sum([int(j) for j in str(i)]) for i in l])
-    return (s + ctrl) % 10 == 0
+    db.commit()
+    db.close()
 
 
 def is_int(string):
+    """ Test if a string can be interpreted as an int. """
     try:
         int(string)
         return True
@@ -78,30 +87,233 @@ def is_int(string):
         return False
 
 
-def is_id(liuid):
-    return (len(liuid) <= 8 and liuid[:-3].islower() and is_int(liuid[-3:])) or \
-            (len(liuid) == 10 and is_int(liuid) and check_pnr(l))
+def is_pnr(l):
+    """
+    Test if a sequence l is a valid swedish personal number.
+    TDDE23 labb 2 <3
+    """
+    if len(l) != 10 or not is_int(id): return False
+    l = [int(i) for i in l]
+    ctrl = l.pop()
+    for i in range(0, len(l), 2): l[i] *= 2
+    s = sum([sum([int(j) for j in str(i)]) for i in l])
+    return (s + ctrl) % 10 == 0
 
 
-def add_member(liuid, name, email):
+def is_liuid(liuid):
+    """ Test if a string is a liuid. """
+    return len(liuid) <= 8 and liuid[:-3].islower() and is_int(liuid[-3:])
 
-    liuid = liuid.to_lower()
 
-    assert is_id(liuid), "Invalid id"
+def is_id(id):
+    """ Test if id is either a liuid or a swedish personal number. """
+    return is_liuid(id) or is_pnr(l)
 
+
+def add_member(liuid, name, email, joined, receive_email):
+    """
+    Add a member to the database.
+    All arguments has to be provided and properly formatted.
+    """
+
+    liuid = liuid.lower()
+
+    if not is_id(liuid):
+        return "Invalid id"
+
+    if "@" not in email:
+        return "Invalid email address"
+
+    try:
+        joined = datetime.datetime.strptime(joined, "%Y-%m-%d")
+    except ValueError:
+        return "joined has to be in the form %Y-%m-%d"
+
+    if receive_email not in ["0", "1", 0, 1]:
+        return "receive_email has to be 0 or 1"
+
+    db = sqlite3.connect(DATABASE_PATH)
     db.execute("INSERT INTO member VALUES\
-            (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)",
-        (liuid, name, email, True))
+            (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
+        (liuid, name, email, joined, receive_email))
+    db.commit()
+    db.close()
 
-# Experimental
-def add_link(member_id):
-    db.execute("INSERT INTO link VALUES (?, ?, ?)",
-        (uuid.uuid4().bytes, 0, member_id))
+    return f"Successfully added user with id: {liuid}"
 
-# Experimental
-def delete_member(member_id):
-    db.execute("DELETE FROM member WHERE id = ?", (member_id,))
+
+def add_link(member_id, action):
+    """
+    Add a link to the database that when accessed,
+    performs action on the member with corresponding member_id.
+    """
+
+    if action not in ACTIONS:
+        return "Invalid action"
+
+    url_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    url = "{}_".format(action)
+
+    while len(url) < 32:
+        char_index = ord(urandom(1))
+        if char_index < len(url_chars):
+            url += url_chars[char_index]
+
+    db = sqlite3.connect(DATABASE_PATH)
+    db.execute("INSERT INTO link VALUES \
+            (?, ?, ?, CURRENT_TIMESTAMP)", (member_id, action, url))
+    db.commit()
+    db.close()
+
+    return f"Successfully added {action} link to id: {member_id}"
+
+
+def get_links():
+    """
+    Get a dict with all of the links currently in the database.
+    The dict is formatted in the following way:
+    {
+        "liuid123": {
+            "ACTION": "ACTION_tehxrkAOEuhrc9238"
+                .
+                .
+        }
+        .
+        .
+    }
+    """
+
+    db = sqlite3.connect(DATABASE_PATH)
+    table = {}
+    for liuid, link in db.execute("SELECT member_id, url FROM link").fetchall():
+        if liuid not in table:
+            table[liuid] = {}
+        table[liuid][link[:link.find("_")]] = link
+    db.close()
+
+    return table
+
+
+def generate_links():
+    """
+    Remove old links and generate new links for all users.
+    Every user gets one link for each ACTION.
+    """
+
+    db = sqlite3.connect(DATABASE_PATH)
+    db.execute("DELETE FROM link")
+    ids = db.execute("SELECT id from member").fetchall()
+    db.commit()
+    db.close()
+
+    for (liuid,) in ids:
+        for action in ACTIONS:
+            add_link(liuid, action)
+
+    return get_links()
+
 
 @app.route("/<link>")
 def handle_link(link):
-    return link
+    """
+    Handle a link and perform action related to the link.
+    Possible actions can be found in ACTIONS.
+    """
+
+    db = sqlite3.connect(DATABASE_PATH)
+    link = db.execute("SELECT * FROM link WHERE url=?", (link,)).fetchone()
+
+    if link is None:
+        return "404"
+
+    member_id, action_id, url, created  = link
+
+    member = db.execute("SELECT * FROM member WHERE id=?", (member_id,)).fetchone()
+    liuid, name, email, joined, renewed, receive_email = member
+
+    ret = "Unknown link"
+
+    if action_id == "SHOW":
+        ret = jsonify({
+            "id": liuid,
+            "name": name,
+            "email": email,
+            "joined": joined,
+            "renewed": renewed,
+            "receive_email": receive_email
+        })
+
+    elif action_id == "RENEW":
+        db.execute("UPDATE member SET renewed=CURRENT_TIMESTAMP WHERE id=?",
+                (liuid,))
+        db.execute("DELETE FROM link WHERE member_id=? AND action_id=?",
+                (liuid, action_id))
+        db.commit()
+        ret = "Your membership has been renewed!"
+
+    elif action_id == "DELETE":
+        db.execute("DELETE FROM link WHERE member_id=?", (liuid,))
+        db.execute("DELETE FROM member WHERE id=?", (liuid,))
+        db.commit()
+        ret = "You have now left LiTHe kod. We hope you enjoyed your stay!"
+
+    db.close()
+
+    return ret
+
+
+@app.route("/add_member/")
+def handle_add_member():
+    """
+    Handle adding new members to the database.
+    Not all arguments has to be specified in order for a user to be added.
+    """
+    if request.authorization["password"] != ADMIN_PASSWORD:
+        return "Unauthorized"
+
+    required_arguments = ["id", "name"]
+    optional_arguments = ["email", "joined", "receive_email"]
+
+    args = request.args
+    member_args = []
+
+    for required_argument in required_arguments:
+        if required_argument not in args:
+            return f"No '{required_argument}' specifed"
+        else:
+            member_args.append(args[required_argument])
+
+    optional_default = ["{}@student.liu.se".format(args["id"]),
+            datetime.date.today().isoformat(), "1"]
+    for optional_argument, default in zip(optional_arguments, optional_default):
+        if optional_argument not in args:
+            member_args.append(default)
+        else:
+            member_args.append(args[optional_argument])
+
+    return add_member(*member_args)
+
+
+@app.route("/metrics/")
+def get_metrics():
+    """
+    Return information about the database.
+    Shows amount of members and active members for now.
+    """
+    if request.authorization["password"] != ADMIN_PASSWORD:
+        return "Unauthorized"
+
+    db = sqlite3.connect(DATABASE_PATH)
+    members = db.execute("SELECT count(*) FROM member").fetchone()[0]
+    active_members = db.execute("SELECT count(*) FROM member\
+            WHERE strftime('%s', CURRENT_TIMESTAMP)\
+            - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
+
+    return f"members: {members}\nactive_members: {active_members}"
+
+
+# Test
+def test_database():
+    create_database()
+    add_member("erima882", "Erik Mattfolk", "erima882@student.liu.se")
+    add_link("erima882", "SHOW")
