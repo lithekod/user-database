@@ -9,6 +9,8 @@ from flask import Flask
 from flask import jsonify
 from flask import request
 
+from emailer import send_mail
+
 ACTIONS = ["SHOW", "RENEW", "DELETE"]
 
 DATABASE_PATH = environ.get("DATABASE_PATH")
@@ -317,6 +319,63 @@ def get_metrics():
             - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
 
     return f"members: {members}\nactive_members: {active_members}"
+
+
+def get_mailing_list(receivers):
+    """
+    Create a mailing list for the spcified receivers.
+    receivers can be any of the following values:
+        default - All members that wants to receive emails.
+        all - All members.
+        inactive - All inactive members.
+        liuid - Only the member with the specified liuid.
+    """
+    db = sqlite3.connected(DATABASE_PATH)
+
+    mailing_list = []
+    if receivers == "default":
+        mailing_list = db.execute(
+                "SELECT * FROM member WHERE receive_email=1").fetchall()
+    elif receivers == "all":
+        mailing_list = db.execute("SELECT * FROM member").fetchall()
+    elif receivers == "inactive":
+        mailing_list = db.execute("SELECT * FROM member\
+            WHERE strftime('%s', CURRENT_TIMESTAMP)\
+            - strftime('%s', renewed) < 180*24*3600").fetchall()
+    else:
+        maling_list = db.execute("SELECT * FROM member WHERE id=?",
+                (receivers,)).fetchall()
+    db.close()
+
+    return mailing_list
+
+
+@app.route("/email_members/")
+def email_members():
+    """
+    Send emails to all members.
+    Specify subject and html file as arguments.
+    """
+    if request.authorization["password"] != SECRET_KEY:
+        return "Unauthorized"
+
+    args = request.args
+    if "subject" not in args:
+        return "No subject specified."
+    subject = args["subject"]
+
+    if "htmlfile" not in args:
+        return "No htmlfile spcified."
+    htmlfile = args["htmlfile"]
+
+    if "receivers" not in args:
+        return "No receivers spcified."
+    receivers = args["receivers"]
+
+    with open(htmlfile) as f:
+        html = htmlfile.read()
+
+    send_mail(get_mailing_list(receivers), get_links(), subject, html)
 
 
 # Test
