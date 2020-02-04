@@ -28,7 +28,6 @@ def create_database():
     Construct the tables in the database.
     Call this function once when setting up the server.
     """
-
     db = sqlite3.connect(DATABASE_PATH)
 
     """Member table
@@ -124,7 +123,6 @@ def add_member(liuid, name, email, joined, receive_email):
     Add a member to the database.
     All arguments has to be provided and properly formatted.
     """
-
     liuid = liuid.lower()
 
     if not is_id(liuid):
@@ -156,7 +154,6 @@ def add_link(member_id, action):
     Add a link to the database that when accessed,
     performs action on the member with corresponding member_id.
     """
-
     if action not in ACTIONS:
         return "Invalid action"
 
@@ -191,7 +188,6 @@ def get_links():
         .
     }
     """
-
     db = sqlite3.connect(DATABASE_PATH)
     table = {}
     for liuid, link in db.execute("SELECT member_id, url FROM link").fetchall():
@@ -208,7 +204,6 @@ def generate_links():
     Remove old links and generate new links for all users.
     Every user gets one link for each ACTION.
     """
-
     db = sqlite3.connect(DATABASE_PATH)
     db.execute("DELETE FROM link")
     ids = db.execute("SELECT id from member").fetchall()
@@ -228,7 +223,6 @@ def handle_link(link):
     Handle a link and perform action related to the link.
     Possible actions can be found in ACTIONS.
     """
-
     db = sqlite3.connect(DATABASE_PATH)
     link = db.execute("SELECT * FROM link WHERE url=?", (link,)).fetchone()
 
@@ -317,6 +311,7 @@ def get_metrics():
     active_members = db.execute("SELECT count(*) FROM member\
             WHERE strftime('%s', CURRENT_TIMESTAMP)\
             - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
+    db.close()
 
     return f"members: {members}\nactive_members: {active_members}"
 
@@ -330,7 +325,7 @@ def get_mailing_list(receivers):
         inactive - All inactive members.
         liuid - Only the member with the specified liuid.
     """
-    db = sqlite3.connected(DATABASE_PATH)
+    db = sqlite3.connect(DATABASE_PATH)
 
     mailing_list = []
     if receivers == "default":
@@ -343,7 +338,7 @@ def get_mailing_list(receivers):
             WHERE strftime('%s', CURRENT_TIMESTAMP)\
             - strftime('%s', renewed) < 180*24*3600").fetchall()
     else:
-        maling_list = db.execute("SELECT * FROM member WHERE id=?",
+        mailing_list = db.execute("SELECT * FROM member WHERE id=?",
                 (receivers,)).fetchall()
     db.close()
 
@@ -359,6 +354,10 @@ def email_members():
     if request.authorization["password"] != SECRET_KEY:
         return "Unauthorized"
 
+    if "receivers" not in args:
+        return "No receivers spcified."
+    receivers = args["receivers"]
+
     args = request.args
     if "subject" not in args:
         return "No subject specified."
@@ -368,14 +367,12 @@ def email_members():
         return "No htmlfile spcified."
     htmlfile = args["htmlfile"]
 
-    if "receivers" not in args:
-        return "No receivers spcified."
-    receivers = args["receivers"]
-
     with open(htmlfile) as f:
-        html = htmlfile.read()
+        html = f.read()
 
-    send_mail(get_mailing_list(receivers), get_links(), subject, html)
+    send_mail(get_mailing_list(receivers), subject, html, get_links())
+
+    return "Mails sent!"
 
 
 # Test

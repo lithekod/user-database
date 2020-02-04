@@ -7,17 +7,33 @@ sender_email = "dev@mail.com"
 password = "dev"
 
 
-def try_construct_link(liu_id, links, action):
+def try_construct_link(liu_id, action, links):
+    """
+    Try to create a link to action for the member with liu_id.
+    If a link does not exist a placeholder link is returned instead.
+
+    :param liu_id str: Member to construct link for.
+    :param action str: Action of link to construct.
+    :param links dict: Links to actions for users.
+    """
     if liu_id in links and action in links[liu_id]:
         return "{}/{}".format(server_url, links[liu_id][action])
     return "{}/404".format(server_url)
 
 
-def send_mail(receivers, links, subject, html):
+def send_mail(receivers, subject, html, links={}):
+    """
+    Send emails to receivers.
+
+    :param receivers list: List of members to receive emails.
+    :param subject str: Subject of emails.
+    :param html str: HTML template to be rendered.
+    :param links dict: Links to actions for users.
+    """
     for liu_id, name, receiver_email, joined, renewed, receive_info in receivers:
-        delete_link = try_construct_link(liu_id, links, "DELETE")
-        renew_link = try_construct_link(liu_id, links, "RENEW")
-        show_link = try_construct_link(liu_id, links, "SHOW")
+        delete_link = try_construct_link(liu_id, "DELETE", links)
+        renew_link = try_construct_link(liu_id, "RENEW", links)
+        show_link = try_construct_link(liu_id, "SHOW", links)
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
         message["From"] = sender_email
