@@ -1,6 +1,6 @@
 import uuid
-import sqlite3
 import datetime
+import sqlite3
 
 from os import urandom
 from os import environ
@@ -8,6 +8,8 @@ from os import environ
 from flask import Flask
 from flask import jsonify
 from flask import request
+
+from html2text import html2text
 
 from emailer import send_mail
 
@@ -363,11 +365,11 @@ def email_members():
         return "No subject specified."
     subject = args["subject"]
 
-    if "htmlfile" not in args:
-        return "No htmlfile spcified."
-    htmlfile = args["htmlfile"]
+    if "template" not in args:
+        return "No template spcified."
+    template = args["template"]
 
-    with open(htmlfile) as f:
+    with open(template + ".html") as f:
         html = f.read()
 
     send_mail(get_mailing_list(receivers), subject, html, get_links())

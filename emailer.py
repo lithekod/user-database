@@ -30,6 +30,7 @@ def send_mail(receivers, subject, html, links={}):
     :param html str: HTML template to be rendered.
     :param links dict: Links to actions for users.
     """
+    plain = html2text(html)
     for liu_id, name, receiver_email, joined, renewed, receive_info in receivers:
         delete_link = try_construct_link(liu_id, "DELETE", links)
         renew_link = try_construct_link(liu_id, "RENEW", links)
@@ -39,11 +40,16 @@ def send_mail(receivers, subject, html, links={}):
         message["From"] = sender_email
         message["To"] = receiver_email
 
+        plain = plain.format(liu_id=liu_id, name=name, email=receiver_email,
+                joined=joined, renewed=renewed, receive_info=receive_info,
+                delete_link=delete_link, renew_link=renew_link,
+                show_link=show_link)
         html = html.format(liu_id=liu_id, name=name, email=receiver_email,
                 joined=joined, renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
                 show_link=show_link)
 
+        part1 = MIMEText(plain, "plain")
         part2 = MIMEText(html, "html")
         message.attach(part2)
 
