@@ -102,7 +102,7 @@ def is_pnr(l):
     Test if a sequence l is a valid swedish personal number.
     TDDE23 labb 2 <3
     """
-    if len(l) != 10 or not is_int(id): return False
+    if len(l) != 10 or not is_int(l): return False
     l = [int(i) for i in l]
     ctrl = l.pop()
     for i in range(0, len(l), 2): l[i] *= 2
@@ -117,7 +117,7 @@ def is_liuid(liuid):
 
 def is_id(id):
     """ Test if id is either a liuid or a swedish personal number. """
-    return is_liuid(id) or is_pnr(l)
+    return is_liuid(id) or is_pnr(id)
 
 
 def add_member(liuid, name, email, joined, receive_email):
@@ -356,11 +356,11 @@ def email_members():
     if request.authorization["password"] != SECRET_KEY:
         return "Unauthorized"
 
+    args = request.args
     if "receivers" not in args:
         return "No receivers spcified."
     receivers = args["receivers"]
 
-    args = request.args
     if "subject" not in args:
         return "No subject specified."
     subject = args["subject"]
