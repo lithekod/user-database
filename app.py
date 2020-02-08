@@ -127,28 +127,37 @@ def add_member(liuid, name, email, joined, receive_email):
     """
     liuid = liuid.lower()
 
+    def fail_str(msg):
+        """ Return a informative error message. """
+        return f"Failed to add user with id: {liuid} - {msg}."
+
     if not is_id(liuid):
-        return "Invalid id"
+        return fail_str("Invalid id")
 
     if "@" not in email:
-        return "Invalid email address"
+        return fail_str("Invalid email")
 
     try:
         joined = datetime.datetime.strptime(joined, "%Y-%m-%d")
     except ValueError:
-        return "joined has to be in the form %Y-%m-%d"
+        return fail_str("Invalid date (%Y-%m-%d required)")
 
     if receive_email not in ["0", "1", 0, 1]:
-        return "receive_email has to be 0 or 1"
+        return fail_str("Invalid receive_email (0 or 1 required)")
 
     db = sqlite3.connect(DATABASE_PATH)
-    db.execute("INSERT INTO member VALUES\
-            (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
-        (liuid, name, email, joined, receive_email))
+    try:
+        db.execute("INSERT INTO member VALUES\
+                (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
+            (liuid, name, email, joined, receive_email))
+    except sqlite3.Error as e:
+        db.close()
+        return fail_str(e.args[0])
+
     db.commit()
     db.close()
 
-    return f"Successfully added user with id: {liuid}"
+    return f"Successfully added user with id: {liuid}."
 
 
 def add_link(member_id, action):
@@ -309,13 +318,18 @@ def get_metrics():
         return "Unauthorized"
 
     db = sqlite3.connect(DATABASE_PATH)
-    members = db.execute("SELECT count(*) FROM member").fetchone()[0]
+    members = db.execute("SELECT * FROM member").fetchall()
     active_members = db.execute("SELECT count(*) FROM member\
             WHERE strftime('%s', CURRENT_TIMESTAMP)\
             - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
     db.close()
 
-    return f"members: {members}\nactive_members: {active_members}"
+    ret = f"members: {len(members)}\n"
+    ret += f"active_members: {active_members}\n"
+    ret += "\n"
+    ret += "\n".join([str(member) for member in members])
+
+    return ret
 
 
 def get_mailing_list(receivers):
@@ -375,10 +389,3 @@ def email_members():
     send_mail(get_mailing_list(receivers), subject, html, get_links())
 
     return "Mails sent!"
-
-
-# Test
-def test_database():
-    create_database()
-    add_member("erima882", "Erik Mattfolk", "erima882@student.liu.se")
-    add_link("erima882", "SHOW")
