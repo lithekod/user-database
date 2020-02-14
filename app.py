@@ -383,3 +383,6 @@ def email_members():
     send_mail(get_mailing_list(receivers), subject, html, get_links())
 
     return "Mails sent!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80)
