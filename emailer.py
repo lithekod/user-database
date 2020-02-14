@@ -2,10 +2,9 @@ import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-server_url = "lithekod.lysator.liu.se"
-sender_email = "dev@mail.com"
-password = "dev"
+from html2text import html2text
 
+from config import *
 
 def try_construct_link(liu_id, action, links):
     """
@@ -17,8 +16,8 @@ def try_construct_link(liu_id, action, links):
     :param links dict: Links to actions for users.
     """
     if liu_id in links and action in links[liu_id]:
-        return "{}/{}".format(server_url, links[liu_id][action])
-    return "{}/404".format(server_url)
+        return "{}/{}".format(SERVER_URL, links[liu_id][action])
+    return "{}/404".format(SERVER_URL)
 
 
 def send_mail(receivers, subject, html, links={}):
@@ -37,7 +36,7 @@ def send_mail(receivers, subject, html, links={}):
         show_link = try_construct_link(liu_id, "SHOW", links)
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = sender_email
+        message["From"] = SENDER_EMAIL
         message["To"] = receiver_email
 
         plain = plain.format(liu_id=liu_id, name=name, email=receiver_email,
@@ -55,7 +54,7 @@ def send_mail(receivers, subject, html, links={}):
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(sender_email, password)
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.sendmail(
-                sender_email, receiver_email, message.as_string()
+                SENDER_EMAIL, receiver_email, message.as_string()
             )

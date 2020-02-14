@@ -13,15 +13,9 @@ from html2text import html2text
 
 from emailer import send_mail
 
+from config import *
+
 ACTIONS = ["SHOW", "RENEW", "DELETE"]
-
-DATABASE_PATH = environ.get("DATABASE_PATH")
-if not DATABASE_PATH:
-    raise ValueError("No DATABASE_PATH set in env")
-
-SECRET_KEY = environ.get("SECRET_KEY")
-if not SECRET_KEY:
-    raise ValueError("No SECRET_KEY set in env")
 
 app = Flask(__name__)
 
