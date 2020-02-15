@@ -2,6 +2,8 @@ import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from datetime import datetime
+
 from html2text import html2text
 
 from config import *
@@ -29,6 +31,10 @@ def send_mail(receivers, subject, html, links={}):
     :param html str: HTML template to be rendered.
     :param links dict: Links to actions for users.
     """
+
+    timestamp = datetime.now().timestamp()
+    deadline = datetime.fromtimestamp(timestamp + 365 / 2 * 24 * 3600).strftime("%Y-%m-%d")
+
     plain = html2text(html)
     for liu_id, name, receiver_email, joined, renewed, receive_info in receivers:
         delete_link = try_construct_link(liu_id, "DELETE", links)
@@ -40,12 +46,14 @@ def send_mail(receivers, subject, html, links={}):
         message["From"] = SENDER_EMAIL
         message["To"] = receiver_email
 
-        formatted_plain = plain.format(liu_id=liu_id, name=name, email=receiver_email,
-                joined=joined, renewed=renewed, receive_info=receive_info,
+        formatted_plain = plain.format(deadline=deadline, liu_id=liu_id,
+                name=name, email=receiver_email, joined=joined,
+                renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
                 show_link=show_link, unsubscribe_link=unsubscribe_link)
-        formatted_html = html.format(liu_id=liu_id, name=name, email=receiver_email,
-                joined=joined, renewed=renewed, receive_info=receive_info,
+        formatted_html = html.format(deadline=deadline, liu_id=liu_id,
+                name=name, email=receiver_email, joined=joined,
+                renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
                 show_link=show_link, unsubscribe_link=unsubscribe_link)
 
