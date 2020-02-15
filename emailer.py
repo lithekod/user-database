@@ -34,6 +34,7 @@ def send_mail(receivers, subject, html, links={}):
         delete_link = try_construct_link(liu_id, "DELETE", links)
         renew_link = try_construct_link(liu_id, "RENEW", links)
         show_link = try_construct_link(liu_id, "SHOW", links)
+        unsubscribe_link = try_construct_link(liu_id, "UNSUBSCRIBE", links)
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
         message["From"] = SENDER_EMAIL
@@ -42,11 +43,11 @@ def send_mail(receivers, subject, html, links={}):
         plain = plain.format(liu_id=liu_id, name=name, email=receiver_email,
                 joined=joined, renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
-                show_link=show_link)
+                show_link=show_link, unsubscribe_link=unsubscribe_link)
         html = html.format(liu_id=liu_id, name=name, email=receiver_email,
                 joined=joined, renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
-                show_link=show_link)
+                show_link=show_link, unsubscribe_link=unsubscribe_link)
 
         part1 = MIMEText(plain, "plain")
         part2 = MIMEText(html, "html")

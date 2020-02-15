@@ -15,7 +15,7 @@ from emailer import send_mail
 
 from config import *
 
-ACTIONS = ["SHOW", "RENEW", "DELETE"]
+ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
 app = Flask(__name__)
 
@@ -264,6 +264,11 @@ def handle_link(link):
         db.execute("DELETE FROM member WHERE id=?", (liuid,))
         db.commit()
         ret = "You have now left LiTHe kod. We hope you enjoyed your stay!"
+
+    elif action_id == "UNSUBSCRIBE":
+        db.execute("UPDATE member SET receive_email=0 WHERE id=?", (liuid,))
+        db.commit()
+        ret = "You are no longer subscribed to emails from LiTHe kod."
 
     db.close()
 
