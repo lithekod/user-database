@@ -5,6 +5,8 @@ import sqlite3
 from os import urandom
 from os import environ
 
+from threading import Thread
+
 from flask import Flask
 from flask import jsonify
 from flask import request
@@ -386,9 +388,10 @@ def email_members():
     with open(template + ".html") as f:
         html = f.read()
 
-    send_mail(get_mailing_list(receivers), subject, html, get_links())
+    Thread(target=send_mail, args=(get_mailing_list(receivers), subject, html,
+        get_links())).run()
 
-    return "Mails sent!"
+    return "Emails are being sent!"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
