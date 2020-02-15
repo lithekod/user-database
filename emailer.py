@@ -16,8 +16,8 @@ def try_construct_link(liu_id, action, links):
     :param links dict: Links to actions for users.
     """
     if liu_id in links and action in links[liu_id]:
-        return "{}/{}".format(SERVER_URL, links[liu_id][action])
-    return "{}/404".format(SERVER_URL)
+        return "http://{}/{}".format(SERVER_URL, links[liu_id][action])
+    return "http://{}/404".format(SERVER_URL)
 
 
 def send_mail(receivers, subject, html, links={}):
@@ -40,17 +40,18 @@ def send_mail(receivers, subject, html, links={}):
         message["From"] = SENDER_EMAIL
         message["To"] = receiver_email
 
-        plain = plain.format(liu_id=liu_id, name=name, email=receiver_email,
+        formatted_plain = plain.format(liu_id=liu_id, name=name, email=receiver_email,
                 joined=joined, renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
                 show_link=show_link, unsubscribe_link=unsubscribe_link)
-        html = html.format(liu_id=liu_id, name=name, email=receiver_email,
+        formatted_html = html.format(liu_id=liu_id, name=name, email=receiver_email,
                 joined=joined, renewed=renewed, receive_info=receive_info,
                 delete_link=delete_link, renew_link=renew_link,
                 show_link=show_link, unsubscribe_link=unsubscribe_link)
 
-        part1 = MIMEText(plain, "plain")
-        part2 = MIMEText(html, "html")
+        part1 = MIMEText(formatted_plain, "plain")
+        part2 = MIMEText(formatted_html, "html")
+        message.attach(part1)
         message.attach(part2)
 
         context = ssl.create_default_context()
