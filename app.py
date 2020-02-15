@@ -353,8 +353,9 @@ def get_mailing_list(receivers):
             WHERE strftime('%s', CURRENT_TIMESTAMP)\
             - strftime('%s', renewed) < 180*24*3600").fetchall()
     else:
-        mailing_list = db.execute("SELECT * FROM member WHERE id=?",
-                (receivers,)).fetchall()
+        for liu_id in receivers.split():
+            mailing_list += db.execute("SELECT * FROM member WHERE id=?",
+                    (liu_id,)).fetchall()
     db.close()
 
     return mailing_list

@@ -15,3 +15,5 @@ If you <b>do not<b> want to continue being a member of LitheKod click on the sec
 
 I still want to be a member: {renew_link}
 I do not want to be a member, remove my information (OBS: this cannot be undone and if you want to become a member again you will have to pay the intro-fee again): {delete_link}
+
+Click <a href="{unsubscribe_link}">here</a> to unsubscribe.
