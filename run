@@ -1,0 +1,15 @@
+#!/usr/env bash
+
+if [[ ! -d logs ]]; then
+    mkdir logs
+fi
+
+sudo killall gunicorn
+sudo gunicorn \
+    --bind 0.0.0.0:80 \
+    --workers 2 \
+    --reload \
+    --access-logfile "logs/log_$(date --iso-8601)" \
+    app:app &
+
+disown %sudo
