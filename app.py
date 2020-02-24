@@ -160,6 +160,9 @@ def add_link(member_id, action):
     """
     Add a link to the database that when accessed,
     performs action on the member with corresponding member_id.
+
+    :param member_id str: id which the link should be linked with.
+    :param action str: The action the link should perform.
     """
     if action not in ACTIONS:
         return "Invalid action"
