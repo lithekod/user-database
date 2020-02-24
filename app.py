@@ -385,7 +385,7 @@ def email_members():
         return "No template spcified."
     template = args["template"]
 
-    with open(template + ".html") as f:
+    with open("templates/{}.html".format(template)) as f:
         html = f.read()
 
     Thread(target=send_mail, args=(get_mailing_list(receivers), subject, html,
