@@ -46,16 +46,22 @@ def send_mail(receivers, subject, html, links={}):
         message["From"] = SENDER_EMAIL
         message["To"] = receiver_email
 
-        formatted_plain = plain.format(deadline=deadline, liu_id=liu_id,
-                name=name, email=receiver_email, joined=joined,
-                renewed=renewed, receive_info=receive_info,
-                delete_link=delete_link, renew_link=renew_link,
-                show_link=show_link, unsubscribe_link=unsubscribe_link)
-        formatted_html = html.format(deadline=deadline, liu_id=liu_id,
-                name=name, email=receiver_email, joined=joined,
-                renewed=renewed, receive_info=receive_info,
-                delete_link=delete_link, renew_link=renew_link,
-                show_link=show_link, unsubscribe_link=unsubscribe_link)
+        kwargs = {
+            "deadline": deadline,
+            "liu_id": liu_id,
+            "name": name,
+            "email": receiver_email,
+            "joined": joined,
+            "renewed": renewed,
+            "receive_info": receive_info,
+            "delete_link": delete_link,
+            "renew_link": renew_link,
+            "show_link": show_link,
+            "unsubscribe_link": unsubscribe_link
+        }
+
+        formatted_plain = plain.format(**kwargs)
+        formatted_html = html.format(**kwargs)
 
         part1 = MIMEText(formatted_plain, "plain")
         part2 = MIMEText(formatted_html, "html")
