@@ -1,0 +1,5 @@
+#!/bin/bash
+read -sp 'Server password: ' password
+echo
+curl -u :$password 'lithekod.lysator.liu.se/metrics/'
+echo

@@ -1,0 +1,21 @@
+#!/bin/bash
+read -sp 'Server password: ' password
+echo
+read -p 'Liuid: ' liuid
+read -p 'Name: ' name
+read -p "Email (default: ${liuid}@student.liu.se): " email
+
+if [[ -z "$email" ]]; then
+    email="${liuid}@student.liu.se"
+fi
+
+formatter='\
+    from urllib import parse;\
+    import sys;\
+    print(parse.quote_plus(" ".join(sys.argv[1:])))'
+
+name=$(python3 -c "${formatter}" $name)
+email=$(python3 -c "${formatter}" $email)
+
+curl -u :$password "lithekod.lysator.liu.se/add_member/?id=${liuid}&name=${name}&email=${email}"
+echo
