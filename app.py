@@ -120,12 +120,13 @@ def add_member(liuid, name, email, joined, receive_email):
     """
     Add a member to the database.
     All arguments has to be provided and properly formatted.
+    Return a tuple with a boolean and a string (success, message).
     """
     liuid = liuid.lower()
 
     def fail_str(msg):
         """ Return a informative error message. """
-        return f"Failed to add user with id: {liuid} - {msg}."
+        return False, f"Failed to add user with id: {liuid} - {msg}."
 
     if not is_id(liuid):
         return fail_str("Invalid id")
@@ -153,7 +154,7 @@ def add_member(liuid, name, email, joined, receive_email):
     db.commit()
     db.close()
 
-    return f"Successfully added user with id: {liuid}."
+    return True, f"Successfully added user with id: {liuid}."
 
 
 def add_link(member_id, action):
@@ -209,7 +210,7 @@ def get_links():
     return table
 
 
-def generate_links():
+def regenerate_links():
     """
     Remove old links and generate new links for all users.
     Every user gets one link for each ACTION.
@@ -237,7 +238,7 @@ def handle_link(link):
     link = db.execute("SELECT * FROM link WHERE url=?", (link,)).fetchone()
 
     if link is None:
-        return "404"
+        return "Invalid link. It might have been used up.."
 
     member_id, action_id, url, created  = link
 
@@ -291,6 +292,8 @@ def handle_add_member():
 
     required_arguments = ["id", "name"]
     optional_arguments = ["email", "joined", "receive_email"]
+    optional_default = ["{}@student.liu.se".format(args["id"]),
+            datetime.date.today().isoformat(), "1"]
 
     args = request.args
     member_args = []
@@ -301,15 +304,31 @@ def handle_add_member():
         else:
             member_args.append(args[required_argument])
 
-    optional_default = ["{}@student.liu.se".format(args["id"]),
-            datetime.date.today().isoformat(), "1"]
     for optional_argument, default in zip(optional_arguments, optional_default):
         if optional_argument not in args:
             member_args.append(default)
         else:
             member_args.append(args[optional_argument])
 
-    return add_member(*member_args)
+    success, message = add_member(*member_args)
+
+    # If the member is successfully added, send them an email.
+    if success:
+
+        for action in ACTIONS:
+            add_link(args["id"], action)
+
+        with open("templates/welcome.html") as f:
+            html = f.read()
+
+        send_mail(
+            get_mailing_list(args["id"]),
+            "Welcome to LiTHe kod!",
+            html,
+            get_links()
+        )
+
+    return message
 
 
 @app.route("/metrics/")
