@@ -290,12 +290,13 @@ def handle_add_member():
     if request.authorization["password"] != SECRET_KEY:
         return "Unauthorized"
 
+    args = request.args
+
     required_arguments = ["id", "name"]
     optional_arguments = ["email", "joined", "receive_email"]
     optional_default = ["{}@student.liu.se".format(args["id"]),
             datetime.date.today().isoformat(), "1"]
 
-    args = request.args
     member_args = []
 
     for required_argument in required_arguments:
