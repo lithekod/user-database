@@ -6,5 +6,4 @@ else
     password=$1
 fi
 
-curl -u :$password 'lithekod.lysator.liu.se/metrics/'
-echo
+curl -u :$password 'lithekod.lysator.liu.se/metrics/' | python3 -m json.tool

@@ -210,6 +210,18 @@ def get_links():
     return table
 
 
+def member_to_dict(member):
+    liuid, name, email, joined, renewed, receive_email = member
+    return {
+        "id": liuid,
+        "name": name,
+        "email": email,
+        "joined": joined,
+        "renewed": renewed,
+        "receive_email": receive_email
+    }
+
+
 def regenerate_links():
     """
     Remove old links and generate new links for all users.
@@ -248,14 +260,7 @@ def handle_link(link):
     ret = "Unknown link"
 
     if action_id == "SHOW":
-        ret = jsonify({
-            "id": liuid,
-            "name": name,
-            "email": email,
-            "joined": joined,
-            "renewed": renewed,
-            "receive_email": receive_email
-        })
+        ret = jsonify(member_to_dict(member))
 
     elif action_id == "RENEW":
         db.execute("UPDATE member SET renewed=CURRENT_TIMESTAMP WHERE id=?",
@@ -348,12 +353,11 @@ def get_metrics():
             - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
     db.close()
 
-    ret = f"members: {len(members)}\n"
-    ret += f"active_members: {active_members}\n"
-    ret += "\n"
-    ret += "\n".join([str(member) for member in members])
-
-    return ret
+    return jsonify({
+        "member_count": len(members),
+        "active_members": active_members,
+        "members": [member_to_dict(member) for member in members]
+    })
 
 
 def get_mailing_list(receivers):
