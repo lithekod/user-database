@@ -1,6 +1,11 @@
 #!/bin/bash
-read -sp 'Server password: ' password
-echo
+if [[ -z "$1" ]]; then
+    read -sp 'Server password: ' password
+    echo
+else
+    password=$1
+fi
+
 read -p 'Liuid: ' liuid
 read -p 'Name: ' name
 read -p "Email (default: ${liuid}@student.liu.se): " email
