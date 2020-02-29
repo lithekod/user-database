@@ -16,6 +16,7 @@ from html2text import html2text
 from emailer import send_mail
 
 from config import *
+from util import *
 
 ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
@@ -84,63 +85,31 @@ def create_database():
     db.close()
 
 
-def is_int(string):
-    """ Test if a string can be interpreted as an int. """
-    try:
-        int(string)
-        return True
-    except:
-        return False
-
-
-def is_pnr(l):
-    """
-    Test if a sequence l is a valid swedish personal number.
-    TDDE23 labb 2 <3
-    """
-    if len(l) != 10 or not is_int(l): return False
-    l = [int(i) for i in l]
-    ctrl = l.pop()
-    for i in range(0, len(l), 2): l[i] *= 2
-    s = sum([sum([int(j) for j in str(i)]) for i in l])
-    return (s + ctrl) % 10 == 0
-
-
-def is_liuid(liuid):
-    """ Test if a string is a liuid. """
-    return len(liuid) <= 8 and liuid[:-3].islower() and is_int(liuid[-3:])
-
-
-def is_id(id):
-    """ Test if id is either a liuid or a swedish personal number. """
-    return is_liuid(id) or is_pnr(id)
-
-
 def add_member(liuid, name, email, joined, receive_email):
     """
     Add a member to the database.
     All arguments has to be provided and properly formatted.
     Return a tuple with a boolean and a string (success, message).
     """
-    liuid = liuid.lower()
-
-    def fail_str(msg):
+    def err_msg(msg):
         """ Return a informative error message. """
         return False, f"Failed to add user with id: {liuid} - {msg}."
 
+    liuid = liuid.lower()
+
     if not is_id(liuid):
-        return fail_str("Invalid id")
+        return err_msg("Invalid id")
 
-    if "@" not in email:
-        return fail_str("Invalid email")
+    if not is_email(email):
+        return err_msg("Invalid email")
 
-    try:
-        joined = datetime.datetime.strptime(joined, "%Y-%m-%d")
-    except ValueError:
-        return fail_str("Invalid date (%Y-%m-%d required)")
+    if not is_date(joined):
+        return err_msg("Invalid date (%Y-%m-%d required)")
 
-    if receive_email not in ["0", "1", 0, 1]:
-        return fail_str("Invalid receive_email (0 or 1 required)")
+    joined = datetime.datetime.strptime(joined, "%Y-%m-%d")
+
+    if not is_bool(receive_email):
+        return err_msg("Invalid receive_email (0 or 1 required)")
 
     db = sqlite3.connect(DATABASE_PATH)
     try:
@@ -149,7 +118,7 @@ def add_member(liuid, name, email, joined, receive_email):
             (liuid, name, email, joined, receive_email))
     except sqlite3.Error as e:
         db.close()
-        return fail_str(e.args[0])
+        return err_msg(e.args[0])
 
     db.commit()
     db.close()
@@ -208,18 +177,6 @@ def get_links():
     db.close()
 
     return table
-
-
-def member_to_dict(member):
-    liuid, name, email, joined, renewed, receive_email = member
-    return {
-        "id": liuid,
-        "name": name,
-        "email": email,
-        "joined": joined,
-        "renewed": renewed,
-        "receive_email": receive_email
-    }
 
 
 def regenerate_links():
@@ -419,6 +376,7 @@ def email_members():
         get_links())).run()
 
     return "Emails are being sent!"
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=80)
