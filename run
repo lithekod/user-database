@@ -9,7 +9,8 @@ sudo gunicorn \
     --bind 0.0.0.0:80 \
     --workers 2 \
     --reload \
-    --access-logfile "logs/log_$(date --iso-8601)" \
+    --access-logfile "logs/accesslog_$(date --iso-8601)" \
+    --error-logfile "logs/errorlog_$(date --iso-8601)" \
     app:app &
 
 disown %sudo
