@@ -7,6 +7,8 @@ from os import environ
 
 from threading import Thread
 
+from functools import wraps
+
 from flask import Flask
 from flask import jsonify
 from flask import request
@@ -21,6 +23,19 @@ from util import *
 ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
 app = Flask(__name__)
+
+def admin_only(f):
+    """ Wrap endpoint so that it will require SECRET_KEY. """
+    @wraps(f)
+    def decorated_fn(*args, **kwargs):
+        auth = request.authorization
+        if auth is None or auth["password"] != SECRET_KEY:
+            return "Unauthorized"
+
+        return f(*args, **kwargs)
+
+    return decorated_fn
+
 
 def create_database():
     """
@@ -244,14 +259,12 @@ def handle_link(link):
 
 
 @app.route("/add_member/")
+@admin_only
 def handle_add_member():
     """
     Handle adding new members to the database.
     Not all arguments has to be specified in order for a user to be added.
     """
-    if request.authorization["password"] != SECRET_KEY:
-        return "Unauthorized"
-
     args = request.args
 
     required_arguments = ["id", "name"]
@@ -295,14 +308,12 @@ def handle_add_member():
 
 
 @app.route("/metrics/")
+@admin_only
 def get_metrics():
     """
     Return information about the database.
     Shows amount of members and active members for now.
     """
-    if request.authorization["password"] != SECRET_KEY:
-        return "Unauthorized"
-
     db = sqlite3.connect(DATABASE_PATH)
     members = db.execute("SELECT * FROM member").fetchall()
     active_members = db.execute("SELECT count(*) FROM member\
@@ -348,14 +359,12 @@ def get_mailing_list(receivers):
 
 
 @app.route("/email_members/")
+@admin_only
 def email_members():
     """
     Send emails to all members.
     Specify subject and html file as arguments.
     """
-    if request.authorization["password"] != SECRET_KEY:
-        return "Unauthorized"
-
     args = request.args
     if "receivers" not in args:
         return "No receivers spcified."
