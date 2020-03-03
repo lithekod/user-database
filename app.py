@@ -13,10 +13,9 @@ from flask import Flask
 from flask import jsonify
 from flask import request
 
-from html2text import html2text
-
 from emailer import send_mail
 
+from queries import *
 from config import *
 from util import *
 
@@ -129,9 +128,7 @@ def add_member(liuid, name, email, joined, receive_email):
 
     db = sqlite3.connect(DATABASE_PATH)
     try:
-        db.execute("INSERT INTO member VALUES\
-                (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)",
-            (liuid, name, email, joined, receive_email))
+        db.execute(INSERT_NEW_MEMBER, (liuid, name, email, joined, receive_email))
     except sqlite3.Error as e:
         db.close()
         return err_msg(e.args[0])
@@ -162,8 +159,7 @@ def add_link(member_id, action):
             url += url_chars[char_index]
 
     db = sqlite3.connect(DATABASE_PATH)
-    db.execute("INSERT INTO link VALUES \
-            (?, ?, ?, CURRENT_TIMESTAMP)", (member_id, action, url))
+    db.execute(INSERT_NEW_LINK, (member_id, action, url))
     db.commit()
     db.close()
 
@@ -201,8 +197,8 @@ def regenerate_links():
     Every user gets one link for each ACTION.
     """
     db = sqlite3.connect(DATABASE_PATH)
-    db.execute("DELETE FROM link")
-    ids = db.execute("SELECT id from member").fetchall()
+    db.execute(DELETE_LINK)
+    ids = db.execute(SELECT_MEMBER_ID).fetchall()
     db.commit()
     db.close()
 
@@ -220,14 +216,14 @@ def handle_link(link):
     Possible actions can be found in ACTIONS.
     """
     db = sqlite3.connect(DATABASE_PATH)
-    link = db.execute("SELECT * FROM link WHERE url=?", (link,)).fetchone()
+    link = db.execute(SELECT_LINK_WITH_URL, (link,)).fetchone()
 
     if link is None:
         return "Invalid link. It might have been used up.."
 
     member_id, action_id, url, created  = link
 
-    member = db.execute("SELECT * FROM member WHERE id=?", (member_id,)).fetchone()
+    member = db.execute(SELECT_MEMBER_WITH_ID, (member_id,)).fetchone()
     liuid, name, email, joined, renewed, receive_email = member
 
     ret = "Unknown link"
@@ -236,21 +232,19 @@ def handle_link(link):
         ret = jsonify(member_to_dict(member))
 
     elif action_id == "RENEW":
-        db.execute("UPDATE member SET renewed=CURRENT_TIMESTAMP WHERE id=?",
-                (liuid,))
-        db.execute("DELETE FROM link WHERE member_id=? AND action_id=?",
-                (liuid, action_id))
+        db.execute(UPDATE_MEMBER_RENEW, (liuid,))
+        db.execute(DELETE_LINK_WITH_IDS, (liuid, action_id))
         db.commit()
         ret = "Your membership has been renewed!"
 
     elif action_id == "DELETE":
-        db.execute("DELETE FROM link WHERE member_id=?", (liuid,))
-        db.execute("DELETE FROM member WHERE id=?", (liuid,))
+        db.execute(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
+        db.execute(DELETE_MEMBER_WITH_ID, (liuid,))
         db.commit()
         ret = "You have now left LiTHe kod. We hope you enjoyed your stay!"
 
     elif action_id == "UNSUBSCRIBE":
-        db.execute("UPDATE member SET receive_email=0 WHERE id=?", (liuid,))
+        db.execute(UPDATE_MEMBER_UNSUBSCRIBE, (liuid,))
         db.commit()
         ret = "You are no longer subscribed to emails from LiTHe kod."
 
@@ -316,10 +310,8 @@ def get_metrics():
     Shows amount of members and active members for now.
     """
     db = sqlite3.connect(DATABASE_PATH)
-    members = db.execute("SELECT * FROM member").fetchall()
-    active_members = db.execute("SELECT count(*) FROM member\
-            WHERE strftime('%s', CURRENT_TIMESTAMP)\
-            - strftime('%s', renewed) < 180*24*3600").fetchone()[0]
+    members = db.execute(SELECT_MEMBER).fetchall()
+    active_members = len(db.execute(SELECT_MEMBER_ACTIVE).fetchall())
     db.close()
 
     return jsonify({
@@ -342,18 +334,14 @@ def get_mailing_list(receivers):
 
     mailing_list = []
     if receivers == "default":
-        mailing_list = db.execute(
-                "SELECT * FROM member WHERE receive_email=1").fetchall()
+        mailing_list = db.execute(SELECT_MEMBER_SUBSCRIBED).fetchall()
     elif receivers == "all":
-        mailing_list = db.execute("SELECT * FROM member").fetchall()
+        mailing_list = db.execute(SELECT_MEMBER).fetchall()
     elif receivers == "inactive":
-        mailing_list = db.execute("SELECT * FROM member\
-            WHERE strftime('%s', CURRENT_TIMESTAMP)\
-            - strftime('%s', renewed) < 180*24*3600").fetchall()
+        mailing_list = db.execute(SELECT_MEMBER_INACTIVE).fetchall()
     else:
         for liu_id in receivers.split():
-            mailing_list += db.execute("SELECT * FROM member WHERE id=?",
-                    (liu_id,)).fetchall()
+            mailing_list += db.execute(SELECT_MEMBER_WITH_ID, (liu_id,)).fetchall()
     db.close()
 
     return mailing_list
