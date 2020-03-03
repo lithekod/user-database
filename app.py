@@ -66,6 +66,7 @@ def create_database():
         DELETE - Removes a member from the database.
         RENEW - Sets the renewed status of the member to the current date.
         SHOW - Provides a json string with one of the members information.
+        UNSUBSCRIBE - Sets the receive_email status to false.
     """
     db.execute(
         """
