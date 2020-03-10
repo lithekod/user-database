@@ -18,13 +18,16 @@ from emailer import send_mail
 from queries import *
 from config import *
 from util import *
+from db import *
 
 ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
 app = Flask(__name__)
 
 def admin_only(f):
-    """ Wrap endpoint so that it will require SECRET_KEY. """
+    """
+    Wraps endpoint so that it will require SECRET_KEY.
+    """
     @wraps(f)
     def decorated_fn(*args, **kwargs):
         auth = request.authorization
@@ -34,70 +37,6 @@ def admin_only(f):
         return f(*args, **kwargs)
 
     return decorated_fn
-
-
-def create_database():
-    """
-    Construct the tables in the database.
-    Call this function once when setting up the server.
-    """
-    db = sqlite3.connect(DATABASE_PATH)
-
-    """Member table
-    This table contains all of the information we store on members.
-    """
-    db.execute(
-        """
-        CREATE TABLE member
-        (
-            id             VARCHAR(10)  PRIMARY KEY,
-            name           VARCHAR(64)  NOT NULL,
-            email          VARCHAR(64)  NOT NULL,
-            joined         TIME         NOT NULL,
-            renewed        TIME         NOT NULL,
-            receive_email  BOOLEAN      NOT NULL
-        )
-        """
-    )
-
-    """Action table
-    The id specifies what a action should do:
-        DELETE - Removes a member from the database.
-        RENEW - Sets the renewed status of the member to the current date.
-        SHOW - Provides a json string with one of the members information.
-        UNSUBSCRIBE - Sets the receive_email status to false.
-    """
-    db.execute(
-        """
-        CREATE TABLE action
-        (
-            id  VARCHAR(10) PRIMARY KEY
-        )
-        """
-    )
-
-    db.executemany("INSERT INTO action VALUES (?)", [(i,) for i in ACTIONS])
-
-    """Link table
-    This table spcifies the active links which can be accessed by a member.
-    """
-    db.execute(
-        """
-        CREATE TABLE link
-        (
-            member_id  VARCHAR(10)  NOT NULL,
-            action_id  VARCHAR(10)  NOT NULL,
-            url        VARCHAR(32)  UNIQUE NOT NULL,
-            created    TIME         NOT NULL,
-            PRIMARY KEY (member_id, action_id),
-            FOREIGN KEY (member_id) REFERENCES member(id),
-            FOREIGN KEY (action_id) REFERENCES action(id)
-        )
-        """
-    )
-
-    db.commit()
-    db.close()
 
 
 def add_member(liuid, name, email, joined, receive_email):
@@ -126,15 +65,10 @@ def add_member(liuid, name, email, joined, receive_email):
     if not is_bool(receive_email):
         return err_msg("Invalid receive_email (0 or 1 required)")
 
-    db = sqlite3.connect(DATABASE_PATH)
     try:
-        db.execute(INSERT_NEW_MEMBER, (liuid, name, email, joined, receive_email))
+        modify_db(INSERT_NEW_MEMBER, (liuid, name, email, joined, receive_email))
     except sqlite3.Error as e:
-        db.close()
         return err_msg(e.args[0])
-
-    db.commit()
-    db.close()
 
     return True, f"Successfully added user with id: {liuid}."
 
@@ -158,10 +92,7 @@ def add_link(member_id, action):
         if char_index < len(url_chars):
             url += url_chars[char_index]
 
-    db = sqlite3.connect(DATABASE_PATH)
-    db.execute(INSERT_NEW_LINK, (member_id, action, url))
-    db.commit()
-    db.close()
+    modify_db(INSERT_NEW_LINK, (member_id, action, url))
 
     return f"Successfully added {action} link to id: {member_id}"
 
@@ -180,13 +111,11 @@ def get_links():
         .
     }
     """
-    db = sqlite3.connect(DATABASE_PATH)
     table = {}
-    for liuid, link in db.execute("SELECT member_id, url FROM link").fetchall():
+    for liuid, link in query_db(SELECT_LINK_MEMBERID_LINK):
         if liuid not in table:
             table[liuid] = {}
         table[liuid][link[:link.find("_")]] = link
-    db.close()
 
     return table
 
@@ -196,13 +125,9 @@ def regenerate_links():
     Remove old links and generate new links for all users.
     Every user gets one link for each ACTION.
     """
-    db = sqlite3.connect(DATABASE_PATH)
-    db.execute(DELETE_LINK)
-    ids = db.execute(SELECT_MEMBER_ID).fetchall()
-    db.commit()
-    db.close()
+    modify_db(DELETE_LINK)
 
-    for (liuid,) in ids:
+    for (liuid,) in query_db(SELECT_MEMBER_ID):
         for action in ACTIONS:
             add_link(liuid, action)
 
@@ -215,15 +140,14 @@ def handle_link(link):
     Handle a link and perform action related to the link.
     Possible actions can be found in ACTIONS.
     """
-    db = sqlite3.connect(DATABASE_PATH)
-    link = db.execute(SELECT_LINK_WITH_URL, (link,)).fetchone()
+    link = query_db(SELECT_LINK_WITH_URL, (link,), True)
 
     if link is None:
         return "Invalid link. It might have been used up.."
 
     member_id, action_id, url, created  = link
 
-    member = db.execute(SELECT_MEMBER_WITH_ID, (member_id,)).fetchone()
+    member = query_db(SELECT_MEMBER_WITH_ID, (member_id,), True)
     liuid, name, email, joined, renewed, receive_email = member
 
     ret = "Unknown link"
@@ -232,23 +156,18 @@ def handle_link(link):
         ret = jsonify(member_to_dict(member))
 
     elif action_id == "RENEW":
-        db.execute(UPDATE_MEMBER_RENEW, (liuid,))
-        db.execute(DELETE_LINK_WITH_IDS, (liuid, action_id))
-        db.commit()
+        modify_db(UPDATE_MEMBER_RENEW, (liuid,))
+        modify_db(DELETE_LINK_WITH_IDS, (liuid, action_id))
         ret = "Your membership has been renewed!"
 
     elif action_id == "DELETE":
-        db.execute(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
-        db.execute(DELETE_MEMBER_WITH_ID, (liuid,))
-        db.commit()
+        modify_db(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
+        modify_db(DELETE_MEMBER_WITH_ID, (liuid,))
         ret = "You have now left LiTHe kod. We hope you enjoyed your stay!"
 
     elif action_id == "UNSUBSCRIBE":
-        db.execute(UPDATE_MEMBER_UNSUBSCRIBE, (liuid,))
-        db.commit()
+        modify_db(UPDATE_MEMBER_UNSUBSCRIBE, (liuid,))
         ret = "You are no longer subscribed to emails from LiTHe kod."
-
-    db.close()
 
     return ret
 
@@ -309,10 +228,8 @@ def get_metrics():
     Return information about the database.
     Shows amount of members and active members for now.
     """
-    db = sqlite3.connect(DATABASE_PATH)
-    members = db.execute(SELECT_MEMBER).fetchall()
-    active_members = len(db.execute(SELECT_MEMBER_ACTIVE).fetchall())
-    db.close()
+    members = query_db(SELECT_MEMBER)
+    active_members = len(query_db(SELECT_MEMBER_ACTIVE))
 
     return jsonify({
         "member_count": len(members),
@@ -330,19 +247,16 @@ def get_mailing_list(receivers):
         inactive - All inactive members.
         liuid - Only the member with the specified liuid.
     """
-    db = sqlite3.connect(DATABASE_PATH)
-
     mailing_list = []
     if receivers == "default":
-        mailing_list = db.execute(SELECT_MEMBER_SUBSCRIBED).fetchall()
+        mailing_list = query_db(SELECT_MEMBER_SUBSCRIBED)
     elif receivers == "all":
-        mailing_list = db.execute(SELECT_MEMBER).fetchall()
+        mailing_list = query_db(SELECT_MEMBER)
     elif receivers == "inactive":
-        mailing_list = db.execute(SELECT_MEMBER_INACTIVE).fetchall()
+        mailing_list = query_db(SELECT_MEMBER_INACTIVE)
     else:
         for liu_id in receivers.split():
-            mailing_list += db.execute(SELECT_MEMBER_WITH_ID, (liu_id,)).fetchall()
-    db.close()
+            mailing_list += query_db(SELECT_MEMBER_WITH_ID, (liu_id,))
 
     return mailing_list
 
@@ -376,5 +290,8 @@ def email_members():
     return "Emails are being sent!"
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+@app.teardown_appcontext
+def close_connection(e):
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
