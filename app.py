@@ -18,11 +18,10 @@ from emailer import send_mail
 from queries import *
 from config import *
 from util import *
-from db import *
-
-ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
 app = Flask(__name__)
+
+from db import *
 
 def admin_only(f):
     """

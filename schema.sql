@@ -10,7 +10,7 @@ CREATE TABLE member
     joined         TIME         NOT NULL,
     renewed        TIME         NOT NULL,
     receive_email  BOOLEAN      NOT NULL
-)
+);
 
 /*
 Action table
@@ -23,7 +23,7 @@ The id specifies what a action should do:
 CREATE TABLE action
 (
     id  VARCHAR(10) PRIMARY KEY
-)
+);
 
 /*
 Link table
@@ -38,4 +38,4 @@ CREATE TABLE link
     PRIMARY KEY (member_id, action_id),
     FOREIGN KEY (member_id) REFERENCES member(id),
     FOREIGN KEY (action_id) REFERENCES action(id)
-)
+);
