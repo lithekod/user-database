@@ -31,7 +31,7 @@ def admin_only(f):
     def decorated_fn(*args, **kwargs):
         auth = request.authorization
         if auth is None or auth["password"] != SECRET_KEY:
-            return "Unauthorized"
+            return "Unauthorized", 401
 
         return f(*args, **kwargs)
 
@@ -142,33 +142,33 @@ def handle_link(link):
     link = query_db(SELECT_LINK_WITH_URL, (link,), True)
 
     if link is None:
-        return "Invalid link. It might have been used up.."
+        return "Invalid link. It might have been used up..", 404
 
     member_id, action_id, url, created  = link
 
     member = query_db(SELECT_MEMBER_WITH_ID, (member_id,), True)
     liuid, name, email, joined, renewed, receive_email = member
 
-    ret = "Unknown link"
+    resp = "Unknown link", 400
 
     if action_id == "SHOW":
-        ret = jsonify(member_to_dict(member))
+        resp = jsonify(member_to_dict(member))
 
     elif action_id == "RENEW":
         modify_db(UPDATE_MEMBER_RENEW, (liuid,))
         modify_db(DELETE_LINK_WITH_IDS, (liuid, action_id))
-        ret = "Your membership has been renewed!"
+        resp = "Your membership has been renewed!", 200
 
     elif action_id == "DELETE":
         modify_db(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
         modify_db(DELETE_MEMBER_WITH_ID, (liuid,))
-        ret = "You have now left LiTHe kod. We hope you enjoyed your stay!"
+        resp = "You have now left LiTHe kod. We hope you enjoyed your stay!", 200
 
     elif action_id == "UNSUBSCRIBE":
         modify_db(UPDATE_MEMBER_UNSUBSCRIBE, (liuid,))
-        ret = "You are no longer subscribed to emails from LiTHe kod."
+        resp = "You are no longer subscribed to emails from LiTHe kod.", 200
 
-    return ret
+    return resp
 
 
 @app.route("/add_member/")
@@ -189,7 +189,7 @@ def handle_add_member():
 
     for required_argument in required_arguments:
         if required_argument not in args:
-            return f"No '{required_argument}' specifed"
+            return f"No '{required_argument}' specifed", 400
         else:
             member_args.append(args[required_argument])
 
@@ -201,9 +201,8 @@ def handle_add_member():
 
     success, message = add_member(*member_args)
 
-    # If the member is successfully added, send them an email.
-    if success:
-
+    # If the member is successfully added, send them an email, unless we are testing.
+    if success and "testing" not in args:
         for action in ACTIONS:
             add_link(args["id"], action)
 
@@ -217,7 +216,7 @@ def handle_add_member():
             get_links()
         )
 
-    return message
+    return message, 200 if success else 400
 
 
 @app.route("/metrics/")
@@ -244,7 +243,7 @@ def get_mailing_list(receivers):
         default - All members that wants to receive emails.
         all - All members.
         inactive - All inactive members.
-        liuid - Only the member with the specified liuid.
+        liuid(s) - Only the members with the specified liuid(s) (space separated).
     """
     mailing_list = []
     if receivers == "default":
@@ -269,15 +268,15 @@ def email_members():
     """
     args = request.args
     if "receivers" not in args:
-        return "No receivers spcified."
+        return "No receivers spcified.", 400
     receivers = args["receivers"]
 
     if "subject" not in args:
-        return "No subject specified."
+        return "No subject specified.", 400
     subject = args["subject"]
 
     if "template" not in args:
-        return "No template spcified."
+        return "No template spcified.", 400
     template = args["template"]
 
     with open("templates/{}.html".format(template)) as f:
@@ -286,7 +285,7 @@ def email_members():
     Thread(target=send_mail, args=(get_mailing_list(receivers), subject, html,
         get_links())).run()
 
-    return "Emails are being sent!"
+    return "Emails are being sent!", 200
 
 
 @app.teardown_appcontext
