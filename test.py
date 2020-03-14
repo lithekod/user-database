@@ -1,6 +1,75 @@
 import unittest
+import base64
+import json
+import os
 
+from db import *
 from util import *
+from config import SECRET_KEY, DATABASE_PATH
+from app import app
+
+# Only run tests in a debug environment.
+# We don't want to delete the production database.
+if SECRET_KEY != "dev":
+    exit()
+
+def reset_db():
+    """ Reset the database. """
+    os.remove(DATABASE_PATH)
+    init_db(app)
+
+
+def app_get(path, get_data=False):
+    """
+    Return the result of getting an endpoint from app.
+    """
+    with app.test_client() as t:
+        cred = base64.b64encode(f":{SECRET_KEY}".encode()).decode()
+        resp = t.get(path, headers={"Authorization": "Basic {}".format(cred)})
+        return resp.data.decode() if get_data else resp.status_code
+
+
+class TestIntegration(unittest.TestCase):
+    """ Test using the database. """
+
+    def test_add_member(self):
+        """ Test adding members to the database. """
+        reset_db()
+        url = "/add_member/?name=Erik+Mattfolk&testing=yes&"
+
+        self.assertEqual(app_get(f"{url}id=erima882"), 200)
+        self.assertEqual(app_get(f"{url}id=erima882"), 400)
+        self.assertEqual(app_get(f"{url}id=erima82"), 400)
+
+        self.assertEqual(app_get(f"{url}id=erima883&email=yeet&"), 400)
+        self.assertEqual(app_get(f"{url}id=erima883&email=yeet@os.net&"), 200)
+
+        self.assertEqual(app_get(f"{url}id=erima884&joined=20-5-1&"), 400)
+        self.assertEqual(app_get(f"{url}id=erima884&joined=2020-5-1&"), 200)
+
+        self.assertEqual(app_get(f"{url}id=erima885&receive_email=yes&"), 400)
+        self.assertEqual(app_get(f"{url}id=erima885&receive_email=1&"), 200)
+
+
+    def test_metrics(self):
+        """ Test getting metrics about the database. """
+        reset_db()
+        url = "/metrics/"
+
+        resp = json.loads(app_get(url, get_data=True))
+        self.assertEqual(resp["active_members"], 0)
+        self.assertEqual(resp["member_count"], 0)
+        self.assertEqual(resp["members"], [])
+
+        app_get("/add_member/?id=erima882&name=Erik+Mattfolk&testing=yes")
+
+        resp = json.loads(app_get(url, get_data=True))
+        self.assertEqual(resp["active_members"], 1)
+        self.assertEqual(resp["member_count"], 1)
+        self.assertEqual(len(resp["members"]), 1)
+
+        #TODO: Add active member test
+
 
 class TestValidation(unittest.TestCase):
     """ Test various utility used for input validation """
