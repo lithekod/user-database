@@ -32,9 +32,10 @@ def modify_db(query, args):
     """
     Query the database and save any modifications done to it.
     """
-    cur = get_db().execute(query, args)
-    cur.commit()
-    cur.close()
+    conn = get_db()
+    conn.execute(query, args)
+    conn.commit()
+    conn.close()
 
 
 def init_db(app):
