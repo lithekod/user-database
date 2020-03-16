@@ -219,6 +219,57 @@ def handle_add_member():
     return message, 200 if success else 400
 
 
+@app.route("/modify/")
+@admin_only
+def handle_modify():
+    """
+    Handle modifying a members data in the database.
+    The member id, field and new value must be specified in the arguments.
+    """
+    args = request.args
+
+    if "id" not in args:
+        return "No id specified.", 400
+
+    if "field" not in args:
+        return "No field specified.", 400
+
+    if "new" not in args:
+        return "No new specified.", 400
+
+    def err_msg(msg):
+        """ Return a informative error message. """
+        return f"Failed to modify user with id: {args['id']} - {msg}.", 400
+
+    if query_db(SELECT_MEMBER_WITH_ID, (args["id"],), True) is None:
+        return err_msg("No such user")
+
+    field_verification = {
+        "name": lambda x: True,
+        "email":  is_email,
+        "joined": is_date,
+        "renewed": is_date,
+        "receive_email": is_bool
+    }
+
+    if args["field"] not in field_verification:
+        return err_msg(f"No such field '{args['field']}'")
+
+    if not field_verification[args["field"]](args["new"]):
+        return err_msg("Badly formatted value '{}' for field '{}'"
+                .format(args['new'], args['field']))
+
+    try:
+        # Formatting the query with user input is insecure
+        # but we have already verified that the
+        # field argument is valid and not malicious.
+        modify_db(UPDATE_MEMBER_FIELD.format(args["field"]), (args["new"], args["id"]))
+    except sqlite3.Error as e:
+        return err_msg(e.args[0])
+
+    return "Successfully modified the database.", 200
+
+
 @app.route("/metrics/")
 @admin_only
 def get_metrics():

@@ -68,7 +68,12 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(resp["member_count"], 1)
         self.assertEqual(len(resp["members"]), 1)
 
-        #TODO: Add active member test
+        app_get("/modify/?id=erima882&field=renewed&new=2019-01-01")
+
+        resp = json.loads(app_get(url, get_data=True))
+        self.assertEqual(resp["active_members"], 0)
+        self.assertEqual(resp["member_count"], 1)
+        self.assertEqual(len(resp["members"]), 1)
 
 
 class TestValidation(unittest.TestCase):
