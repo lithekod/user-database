@@ -267,7 +267,7 @@ def handle_modify():
     except sqlite3.Error as e:
         return err_msg(e.args[0])
 
-    return "Successfully modified the database.", 200
+    return f"Successfully set '{args['field']}' to '{args['new']}' for '{args['id']}'", 200
 
 
 @app.route("/metrics/")
