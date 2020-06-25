@@ -15,7 +15,11 @@ if SECRET_KEY != "dev":
 
 def reset_db():
     """ Reset the database. """
-    os.remove(DATABASE_PATH)
+    try:
+        os.remove(DATABASE_PATH)
+    except OSError:
+        pass
+
     init_db(app)
 
 

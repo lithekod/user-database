@@ -1,0 +1,48 @@
+:root {
+    --primary-color: #eee;
+    --background-color: #202020;
+    --footer-bg-color: #303030;
+    --link-color: #1ec6ba;
+    --logo-height: 4em;
+    --scale: 1.5em;
+}
+
+body {
+    color: var(--primary-color);
+    background-color: var(--background-color);
+
+    font-family: "PT Sans", Helvetica, Arial, sans-serif;
+    font-size: var(--scale);
+
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#content {
+    background-color: var(--footer-bg-color);
+
+    max-width: 40em;
+    padding: 0 1em;
+}
+
+#logobox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    margin: 1em 0;
+}
+
+#logo {
+    height: var(--logo-height);
+}
+
+#logotext {
+    font-size: calc(var(--logo-height) * 2 / 3);
+    margin: 0 auto;
+}

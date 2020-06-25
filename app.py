@@ -12,6 +12,8 @@ from functools import wraps
 from flask import Flask
 from flask import jsonify
 from flask import request
+from flask import render_template
+from flask import url_for
 
 from emailer import send_mail
 
@@ -246,7 +248,7 @@ def handle_modify():
 
     field_verification = {
         "name": lambda x: True,
-        "email":  is_email,
+        "email": is_email,
         "joined": is_date,
         "renewed": is_date,
         "receive_email": is_bool
@@ -344,3 +346,14 @@ def close_connection(e):
     db = getattr(g, "_database", None)
     if db is not None:
         db.close()
+
+
+# GUI functions
+
+@app.route("/")
+def index():
+    return render_template("gui/index.html")
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
