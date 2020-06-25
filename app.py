@@ -289,6 +289,18 @@ def get_metrics():
     })
 
 
+@app.route("/membercount/")
+def get_member_count():
+    """
+    Return information about how many members there are.
+    This endpoint does not require admin privileges.
+    """
+    return jsonify({
+        "total_members": len(query_db(SELECT_MEMBER)),
+        "active_members": len(query_db(SELECT_MEMBER_ACTIVE)),
+    })
+
+
 def get_mailing_list(receivers):
     """
     Create a mailing list for the spcified receivers.

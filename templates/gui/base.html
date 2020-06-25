@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
+        <link rel='icon' type='image/png' href='/static/icon.png'>
+    </head>
+    <body>
+        <div id="logobox">
+            <img id="logo" src="{{ url_for("static", filename="totalrippad.svg") }}" alt="logo">
+            <h3 id="logotext">database</h3>
+        </div>
+        <div id="content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </body>
+</html>
