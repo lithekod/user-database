@@ -4,9 +4,14 @@ if [[ ! -d logs ]]; then
     mkdir logs
 fi
 
+certfolder='/etc/letsencrypt/live/lithekod.lysator.liu.se'
+
 sudo killall gunicorn
 sudo gunicorn \
     --bind 0.0.0.0:80 \
+    --keyfile "$certfolder/privkey.pem" \
+    --certfile "$certfolder/cert.pem" \
+    --ca-certs "$certfolder/chain.pem" \
     --workers 2 \
     --reload \
     --access-logfile "logs/accesslog_$(date --iso-8601)" \
