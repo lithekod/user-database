@@ -12,7 +12,6 @@ from functools import wraps
 from flask import Flask
 from flask import jsonify
 from flask import request
-from flask import redirect
 from flask import render_template
 from flask import url_for
 
@@ -359,16 +358,6 @@ def close_connection(e):
     db = getattr(g, "_database", None)
     if db is not None:
         db.close()
-
-
-@app.before_request
-def before_request():
-    """
-    Force HTTPS connections.
-    """
-    if not request.is_secure and SECRET_KEY != "dev":
-        url = request.url.replace("http://", "https://", 1)
-        return redirect(url, code=301)
 
 
 @app.route("/")
