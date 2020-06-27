@@ -25,6 +25,7 @@ body {
 
 #content {
     background-color: var(--footer-bg-color);
+    border-radius: 8px;
 
     max-width: 40em;
     padding: 0 1em;

@@ -1,0 +1,7 @@
+{% extends "gui/base.html" %}
+{% block content %}
+<script src="{{ url_for("static", filename="login.js") }}"></script>
+<input type="password" id="passwordinput">
+<button onclick="submitPassword()">Login</button>
+<p id="infotext"></p>
+{% endblock %}

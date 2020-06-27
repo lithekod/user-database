@@ -40,6 +40,16 @@ def admin_only(f):
     return decorated_fn
 
 
+@app.route("/authorized/")
+@admin_only
+def is_authorized():
+    """
+    Return 200 if the authentication succeeded.
+    Otherwise 401 (in admin_only).
+    """
+    return "Authorized", 200
+
+
 def add_member(liuid, name, email, joined, receive_email):
     """
     Add a member to the database.
@@ -363,6 +373,16 @@ def close_connection(e):
 @app.route("/")
 def index():
     return render_template("gui/index.html")
+
+
+@app.route("/gui/add_member/")
+def gui_add_member():
+    return render_template("gui/add_member.html")
+
+
+@app.route("/gui/login/")
+def gui_login():
+    return render_template("gui/login.html")
 
 
 if __name__ == "__main__":
