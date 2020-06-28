@@ -1,3 +1,20 @@
+async function submitPassword() {
+    let infoText = document.getElementById("infotext");
+    infoText.style = "display: none;";
+
+    let loggedIn = await tryLogin(document.getElementById("passwordinput").value);
+
+    if (!loggedIn) {
+        infoText.style = "margin-top: 0.5em; margin-bottom: 0;";
+    }
+}
+
+function handleKeyPress(e) {
+    if (e.key === "Enter") {
+        submitPassword();
+    }
+}
+
 function returnFromLogin() {
     let params = new URLSearchParams(window.location.search);
     if (params.get("return-to") != null) {
@@ -6,10 +23,6 @@ function returnFromLogin() {
     } else {
         window.location.replace("/");
     }
-}
-
-function submitPassword() {
-    tryLogin(document.getElementById("passwordinput").value);
 }
 
 async function tryLogin(password) {
@@ -23,7 +36,8 @@ async function tryLogin(password) {
     if (statusCode === 200) {
         document.cookie = "auth=" + password + ";max-age=30;path=/";
         returnFromLogin();
-    } else {
-        document.getElementById("infotext").textContent = "Login failed";
+        return true;
     }
+
+    return false;
 }

@@ -1,7 +1,7 @@
 {% extends "gui/base.html" %}
 {% block content %}
 <script src="{{ url_for("static", filename="login.js") }}"></script>
-<input type="password" id="passwordinput">
+<input type="password" id="passwordinput" class="inputfield" onkeypress="handleKeyPress(event)">
 <button onclick="submitPassword()">Login</button>
-<p id="infotext"></p>
+<p id="infotext" style="display: none;">Invalid password</p>
 {% endblock %}
