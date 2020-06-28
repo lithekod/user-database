@@ -35,7 +35,6 @@ def modify_db(query, args):
     conn = get_db()
     conn.execute(query, args)
     conn.commit()
-    conn.close()
 
 
 def init_db(app):

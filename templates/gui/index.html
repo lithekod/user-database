@@ -1,7 +1,12 @@
 {% extends "gui/base.html" %}
 {% block content %}
-<p>Active members: <span id="active-members">fetching..</span></p>
-<p>Members: <span id="total-members">fetching..</span></p>
+<p style="margin-top: 0;">
+    Active members: <span id="active-members">fetching..</span>
+</p>
+<p>
+    Members: <span id="total-members">fetching..</span>
+</p>
+<a href="/gui/add_member/"><button>Add member</button></a>
 
 <!-- Run script when all elements are loaded -->
 <script src="{{ url_for("static", filename="membercount.js") }}"></script>

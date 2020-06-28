@@ -51,6 +51,8 @@ body {
 #content input, #content button {
     font-size: 1em;
 
+    padding: 0.5em;
+
     color: var(--primary-color);
     background-color: var(--footer-bg-color);
 
@@ -58,4 +60,36 @@ body {
     border-width: 1px;
     border-radius: 2px;
     border-color: var(--primary-color);
+}
+
+#content button:hover {
+    color: var(--link-color);
+    border-color: var(--link-color);
+}
+
+#content #info-text {
+    max-width: fit-content;
+}
+
+/*
+ * Forms
+ */
+
+form {
+    display: table;
+    margin-bottom: 1em;
+}
+
+.row {
+    display: table-row;
+    margin-bottom: 0.5em;
+}
+
+.row * {
+    display: table-cell;
+    margin: 0.25em;
+}
+
+.row label {
+    padding-right: 0.5em;
 }

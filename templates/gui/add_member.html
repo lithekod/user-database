@@ -1,5 +1,28 @@
 {% extends "gui/base_auth.html"%}
 {% block content %}
 {{ super() }}
+<script src="{{ url_for("static", filename="add_member.js") }}"></script>
+
+<h3 style="margin-top: 0">Add a member</h2>
+
+<form>
+    <div class="row">
+        <label for="id-input">Liuid</label>
+        <input type="text" id="id-input" onfocusout="setDefaultEmail()">
+    </div>
+    <div class="row">
+        <label for="name-input">Name</label>
+        <input type="text" id="name-input">
+    </div>
+    <div class="row">
+        <label for="email-input">Email</label>
+        <input type="text" id="email-input">
+    </div>
+</form>
+
+<div style="text-align: right;">
+    <button onclick="submit()">Submit</button>
+</div>
+<p id="info-text" style="display: none;"></p>
 
 {% endblock %}

@@ -189,6 +189,7 @@ def handle_add_member():
     """
     Handle adding new members to the database.
     Not all arguments has to be specified in order for a user to be added.
+    The 'testing' argument will prevent this function from sending emails.
     """
     args = request.args
 

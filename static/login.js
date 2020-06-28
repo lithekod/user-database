@@ -1,5 +1,5 @@
 async function submitPassword() {
-    let infoText = document.getElementById("infotext");
+    let infoText = document.getElementById("info-text");
     infoText.style = "display: none;";
 
     let loggedIn = await tryLogin(document.getElementById("passwordinput").value);
@@ -34,7 +34,7 @@ async function tryLogin(password) {
     }).then(resp => resp.status);
 
     if (statusCode === 200) {
-        document.cookie = "auth=" + password + ";max-age=30;path=/";
+        document.cookie = "auth=" + password + ";max-age=21600;path=/";
         returnFromLogin();
         return true;
     }
