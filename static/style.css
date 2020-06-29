@@ -71,6 +71,10 @@ body {
     max-width: fit-content;
 }
 
+.no-bottom-margin {
+    margin-bottom: 0;
+}
+
 /*
  * Forms
  */

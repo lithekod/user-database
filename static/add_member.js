@@ -1,19 +1,4 @@
-function getCookie(cname) {
-    let name = cname + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-
-    return "";
-}
+import { getCookie, getGlobal } from "./utils.js";
 
 function sendRequest(endpoint, parameters) {
     let password = getCookie("auth");
@@ -25,7 +10,7 @@ function sendRequest(endpoint, parameters) {
     })
 }
 
-function submit() {
+getGlobal().submit = function() {
     let id    = document.getElementById("id-input").value;
     let name  = document.getElementById("name-input").value;
     let email = document.getElementById("email-input").value;
@@ -56,7 +41,7 @@ function submit() {
         });
 }
 
-function setDefaultEmail() {
+getGlobal().setDefaultEmail = function() {
     let idField    = document.getElementById("id-input");
     let emailField = document.getElementById("email-input");
 

@@ -300,7 +300,7 @@ def get_metrics():
     })
 
 
-@app.route("/membercount/")
+@app.route("/member_count/")
 def get_member_count():
     """
     Return information about how many members there are.

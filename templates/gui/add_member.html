@@ -1,9 +1,9 @@
 {% extends "base_auth.html" %}
 {% block content %}
 {{ super() }}
-<script src="{{ url_for("static", filename="add_member.js") }}"></script>
+<script type="module" src="{{ url_for("static", filename="add_member.js") }}"></script>
 
-<h3 style="margin-top: 0">Add a member</h2>
+<h3 style="margin-top: 0;">Add a member</h2>
 
 <form>
     <div class="row">
@@ -23,6 +23,6 @@
 <div style="text-align: right;">
     <button onclick="submit()">Submit</button>
 </div>
-<p id="info-text" style="display: none;"></p>
+<p id="info-text" class="no-bottom-margin" style="display: none;"></p>
 
 {% endblock %}

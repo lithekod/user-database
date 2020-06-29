@@ -14,3 +14,7 @@ export function getCookie(cname) {
 
     return "";
 }
+
+export function getGlobal() {
+    return window;
+}
