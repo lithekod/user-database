@@ -219,7 +219,7 @@ def handle_add_member():
         for action in ACTIONS:
             add_link(args["id"], action)
 
-        with open("templates/welcome.html") as f:
+        with open("email-templates/welcome.html") as f:
             html = f.read()
 
         send_mail(
@@ -355,7 +355,7 @@ def email_members():
         return "No template spcified.", 400
     template = args["template"]
 
-    with open("templates/{}.html".format(template)) as f:
+    with open("email-templates/{}.html".format(template)) as f:
         html = f.read()
 
     Thread(target=send_mail, args=(get_mailing_list(receivers), subject, html,

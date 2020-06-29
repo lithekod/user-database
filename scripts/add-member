@@ -22,5 +22,5 @@ formatter='\
 name=$(python3 -c "${formatter}" $name)
 email=$(python3 -c "${formatter}" $email)
 
-curl -u :$password "lithekod.lysator.liu.se/add_member/?id=${liuid}&name=${name}&email=${email}"
+curl -u :$password "https://lithekod.lysator.liu.se/add_member/?id=${liuid}&name=${name}&email=${email}"
 echo
