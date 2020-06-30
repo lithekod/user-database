@@ -1,4 +1,5 @@
 import uuid
+import json
 import datetime
 import sqlite3
 
@@ -136,7 +137,7 @@ def regenerate_links():
     Remove old links and generate new links for all users.
     Every user gets one link for each ACTION.
     """
-    modify_db(DELETE_LINK)
+    modify_db(DELETE_LINK, [])
 
     for (liuid,) in query_db(SELECT_MEMBER_ID):
         for action in ACTIONS:
@@ -164,7 +165,8 @@ def handle_link(link):
     resp = "Unknown link", 400
 
     if action_id == "SHOW":
-        resp = jsonify(member_to_dict(member))
+        json_data = json.dumps(member_to_dict(member))
+        resp = render_template("gui/member_data.html", json_data=json_data)
 
     elif action_id == "RENEW":
         modify_db(UPDATE_MEMBER_RENEW, (liuid,))

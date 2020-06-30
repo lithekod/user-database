@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<p id="json-data" style="display: none;">{{ json_data }}</p>
+
+<table>
+    <tr>
+        <td>id:</td>
+        <td id="member-id">...</td>
+    </tr>
+    <tr>
+        <td>name:</td>
+        <td id="member-name">...</td>
+    </tr>
+    <tr>
+        <td>email:</td>
+        <td id="member-email">...</td>
+    </tr>
+    <tr>
+        <td>joined:</td>
+        <td id="member-joined">...</td>
+    </tr>
+    <tr>
+        <td>renewed:</td>
+        <td id="member-renewed">...</td>
+    </tr>
+    <tr>
+        <td>subscribed:</td>
+        <td id="member-subscribed">...</td>
+    </tr>
+</table>
+
+<!-- Run script when all elements are loaded -->
+<script src="{{ url_for("static", filename="member_data.js") }}"></script>
+{% endblock %}
