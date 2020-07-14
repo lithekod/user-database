@@ -1,5 +1,22 @@
 import datetime
 
+def random_string(length):
+    """
+    Return a random cryptographically safe string of given length.
+    There are 62 possible characters, so there are 62^n possible strings of
+    length n.
+    """
+    s = ""
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+    while len(s) < length:
+        char_index = ord(urandom(1))
+        if char_index < len(chars):
+            s += chars[char_index]
+
+    return s
+
+
 def is_int(string):
     """ Test if a string can be interpreted as an int. """
     try:

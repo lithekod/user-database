@@ -16,6 +16,9 @@ from flask import request
 from flask import render_template
 from flask import url_for
 
+from google.oauth2 import id_token as token_auth
+from google.auth.transport import requests
+
 from emailer import send_mail
 
 from queries import *
@@ -26,19 +29,66 @@ app = Flask(__name__)
 
 from db import *
 
+tokens = {}
+
 def admin_only(f):
     """
     Wraps endpoint so that it will require SECRET_KEY.
     """
     @wraps(f)
     def decorated_fn(*args, **kwargs):
-        auth = request.authorization
-        if auth is None or auth["password"] != SECRET_KEY:
+
+        if SECRET_KEY == "dev":
+            return f(*args, **kwargs)
+
+        now = datetime.datetime.now().timestamp()
+        auth = request.headers["Authorization"]
+        auth_type, token = auth.split(" ")
+
+        if auth_type != "Bearer":
+            return "No bearer token specified", 401
+
+        if token not in tokens or tokens[token] < now:
             return "Unauthorized", 401
 
         return f(*args, **kwargs)
 
     return decorated_fn
+
+
+@app.route("/login/", methods=["POST"])
+def login():
+    token = request.get_json()["token"]
+
+    CLIENT_ID = "235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
+
+    try:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+        now = datetime.datetime.now().timestamp()
+
+        if int(idinfo["exp"]) < now:
+            return "Token expired", 401
+
+        if idinfo["hd"] != "lithekod.se":
+            return "Only members of the LiTHe kod board are allowed", 401
+
+        if idinfo["iss"] not in ["accounts.google.com", "https://accounts.google.com"]:
+            return "Wrong issuer", 401
+
+        roles = ["webb", "ordf", "vordf", "pr", "verks", "kassor", "gamejam"]
+        valid_emails = [role + "@lithekod.se" for role in roles]
+
+        if idinfo["email"] not in valid_emails:
+            return "Invalid user", 401
+
+        expiration = now + datetime.timedelta(hours=6).seconds
+        session_token = random_string(32)
+        tokens[session_token] = expiration
+
+        return session_token, 200
+
+    except ValueError as e:
+        return "Login failed: {}".format(e), 401
 
 
 @app.route("/authorized/")
@@ -96,14 +146,7 @@ def add_link(member_id, action):
     if action not in ACTIONS:
         return "Invalid action"
 
-    url_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    url = "{}_".format(action)
-
-    while len(url) < 32:
-        char_index = ord(urandom(1))
-        if char_index < len(url_chars):
-            url += url_chars[char_index]
-
+    url = "{}_{}".format(action, random_string(32 - len(action) - 1))
     modify_db(INSERT_NEW_LINK, (member_id, action, url))
 
     return f"Successfully added {action} link to id: {member_id}"
