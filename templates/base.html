@@ -4,6 +4,8 @@
         <meta charset="utf-8">
         <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
         <link rel='icon' type='image/png' href='/static/icon.png'>
+        {% block scripts %}
+        {% endblock %}
     </head>
     <body>
         <div id="logobox" onclick="window.location.href = '/';">
