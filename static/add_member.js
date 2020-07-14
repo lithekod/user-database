@@ -1,10 +1,10 @@
 import { getCookie, getGlobal } from "./utils.js";
 
 function sendRequest(endpoint, parameters) {
-    let password = getCookie("auth");
+    let bearer = getCookie("auth");
     return fetch(endpoint + "?" + parameters.toString(), {
         headers: new Headers({
-            "Authorization": "Basic " + btoa(":" + password),
+            "Authorization": "Bearer " + bearer,
              'Content-Type': 'application/x-www-form-urlencoded'
         })
     })

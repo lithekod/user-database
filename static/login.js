@@ -8,7 +8,7 @@ function returnFromLogin() {
     }
 }
 
-async function onSignIn(googleUser) {
+function onSignIn(googleUser) {
     fetch("/login/", {
         method: "POST",
         headers: new Headers({
