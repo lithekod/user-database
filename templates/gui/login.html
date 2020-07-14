@@ -3,19 +3,17 @@
 
 {% block scripts %}
 
-<script src="{{ url_for("static", filename="login.js") }}"></script>
-
-<script src="https://apis.google.com/js/platform.js" async defer></script>
 <meta name="google-signin-client_id" content="235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com">
+<script src="https://apis.google.com/js/platform.js"></script>
+
+<script src="{{ url_for("static", filename="login.js") }}"></script>
 
 {% endblock %}
 
 
 {% block content %}
 
-<input type="password" id="passwordinput" onkeypress="handleKeyPress(event)">
-<button onclick="submitPassword()">Login</button>
-<p id="info-text" style="display: none;">Invalid password</p>
 <div class="g-signin2" data-onsuccess="onSignIn"></div>
+<p id="info-text" style="display: none;">Login failed</p>
 
 {% endblock %}

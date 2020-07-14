@@ -1,20 +1,3 @@
-async function submitPassword() {
-    let infoText = document.getElementById("info-text");
-    infoText.style = "display: none;";
-
-    let loggedIn = await tryLogin(document.getElementById("passwordinput").value);
-
-    if (!loggedIn) {
-        infoText.style = "margin-top: 0.5em; margin-bottom: 0;";
-    }
-}
-
-function handleKeyPress(e) {
-    if (e.key === "Enter") {
-        submitPassword();
-    }
-}
-
 function returnFromLogin() {
     let params = new URLSearchParams(window.location.search);
     if (params.get("return-to") != null) {
@@ -25,19 +8,23 @@ function returnFromLogin() {
     }
 }
 
-async function tryLogin(password) {
-    let statusCode = await fetch("/authorized/", {
+async function onSignIn(googleUser) {
+    fetch("/login/", {
+        method: "POST",
         headers: new Headers({
-            "Authorization": "Basic " + btoa(":" + password),
-             'Content-Type': 'application/x-www-form-urlencoded'
-        })
-    }).then(resp => resp.status);
-
-    if (statusCode === 200) {
-        document.cookie = "auth=" + password + ";max-age=21600;path=/";
-        returnFromLogin();
-        return true;
-    }
-
-    return false;
+            "Accept": "application/json, text/plain, */*",
+            "Content-Type": 'application/json'
+        }),
+        body: JSON.stringify({ token: googleUser.getAuthResponse().id_token })
+    }).then(resp => {
+        if (resp.status === 401) {
+            let infoText = document.getElementById("info-text");
+            infoText.style = "";
+            gapi.auth2.getAuthInstance().signOut();
+        } else if (resp.status === 200) {
+            let session = resp.text();
+            document.cookie = "auth=" + session + ";max-age=21600;path=/";
+            returnFromLogin();
+        }
+    });
 }
