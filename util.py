@@ -1,5 +1,7 @@
 import datetime
 
+from os import urandom
+
 def random_string(length):
     """
     Return a random cryptographically safe string of given length.

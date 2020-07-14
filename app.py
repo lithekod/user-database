@@ -3,7 +3,6 @@ import json
 import datetime
 import sqlite3
 
-from os import urandom
 from os import environ
 
 from threading import Thread
@@ -63,7 +62,7 @@ def login():
     CLIENT_ID = "235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
 
     try:
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+        idinfo = token_auth.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
         now = datetime.datetime.now().timestamp()
 
         if int(idinfo["exp"]) < now:
