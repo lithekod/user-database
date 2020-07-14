@@ -17,14 +17,16 @@ async function onSignIn(googleUser) {
         }),
         body: JSON.stringify({ token: googleUser.getAuthResponse().id_token })
     }).then(resp => {
-        if (resp.status === 401) {
-            let infoText = document.getElementById("info-text");
-            infoText.style = "";
-            gapi.auth2.getAuthInstance().signOut();
-        } else if (resp.status === 200) {
-            let session = resp.text();
-            document.cookie = "auth=" + session + ";max-age=21600;path=/";
-            returnFromLogin();
-        }
+        resp.text().then(text => {
+            if (resp.status === 401) {
+                let infoText = document.getElementById("info-text");
+                infoText.style = "";
+                infoText.textContent = text;
+                gapi.auth2.getAuthInstance().signOut();
+            } else if (resp.status === 200) {
+                document.cookie = "auth=" + text + ";max-age=21600;path=/";
+                returnFromLogin();
+            }
+        });
     });
 }
