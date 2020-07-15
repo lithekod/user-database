@@ -28,8 +28,7 @@ def app_get(path, get_data=False):
     Return the result of getting an endpoint from app.
     """
     with app.test_client() as t:
-        cred = base64.b64encode(f":{SECRET_KEY}".encode()).decode()
-        resp = t.get(path, headers={"Authorization": "Basic {}".format(cred)})
+        resp = t.get(path)
         return resp.data.decode() if get_data else resp.status_code
 
 

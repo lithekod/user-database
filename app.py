@@ -28,8 +28,6 @@ app = Flask(__name__)
 
 from db import *
 
-tokens = {}
-
 def admin_only(f):
     """
     Wraps endpoint so that it will require SECRET_KEY.
@@ -50,7 +48,15 @@ def admin_only(f):
         if auth_type != "Bearer":
             return "No bearer token specified", 401
 
-        if token not in tokens or tokens[token] < now:
+        tok = query_db(SELECT_TOKEN_WITH_ID, (token,), one=True)
+
+        if tok is None:
+            return "Unauthorized", 401
+
+        token_id, email, issued = tok
+        issued = datetime.datetime.fromisoformat(issued).timestamp()
+
+        if issued + 21600 < now:
             return "Unauthorized", 401
 
         return f(*args, **kwargs)
@@ -85,11 +91,12 @@ def login():
 
         expiration = now + datetime.timedelta(hours=6).seconds
         session_token = random_string(32)
-        tokens[session_token] = expiration
+
+        modify_db(INSERT_NEW_TOKEN, (session_token, idinfo["email"]))
 
         return session_token, 200
 
-    except ValueError as e:
+    except Exception as e:
         return "Login failed: {}".format(e), 401
 
 
