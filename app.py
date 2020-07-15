@@ -41,9 +41,12 @@ def admin_only(f):
             return f(*args, **kwargs)
 
         now = datetime.datetime.now().timestamp()
-        auth = request.headers["Authorization"]
-        auth_type, token = auth.split(" ")
+        auth = request.headers["Authorization"].split(" ")
 
+        if len(auth) != 2:
+            return "Invalid authorization. Try reloading.", 401
+
+        auth_type, token = auth
         if auth_type != "Bearer":
             return "No bearer token specified", 401
 
