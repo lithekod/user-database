@@ -54,7 +54,10 @@ def admin_only(f):
             return "Unauthorized", 401
 
         token_id, email, issued = tok
-        issued = datetime.datetime.fromisoformat(issued).timestamp()
+
+        #FIXME: use datetime.datetime.fromisoformat when 3.8 is available
+        fmt = "%Y-%m-%d %H:%M:%S"
+        issued = datetime.datetime.strptime(issued, fmt).timestamp()
 
         if issued + 21600 < now:
             return "Unauthorized", 401
