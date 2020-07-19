@@ -1,6 +1,8 @@
 import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
+from email.utils import formataddr
 
 from datetime import datetime
 
@@ -43,7 +45,7 @@ def send_mail(receivers, subject, html, links={}):
         unsubscribe_link = try_construct_link(liu_id, "UNSUBSCRIBE", links)
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = SENDER_EMAIL
+        message["From"] = formataddr((str(Header('LiTHe kod', 'utf-8')), SENDER_EMAIL))
         message["To"] = receiver_email
 
         kwargs = {
