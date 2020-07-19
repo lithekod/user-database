@@ -1,14 +1,22 @@
 {% extends "base_auth.html" %}
-{% block content %}
+
+
+{% block scripts %}
+
 {{ super() }}
-<script type="module" src="{{ url_for("static", filename="add_member.js") }}"></script>
+<script type="module" src="{{ url_for("static", filename="add_member.js") }}" async></script>
+
+{% endblock %}
+
+
+{% block content %}
 
 <h3 style="margin-top: 0;">Add a member</h2>
 
 <form>
     <div class="row">
         <label for="id-input">Liuid</label>
-        <input type="text" id="id-input" onfocusout="setDefaultEmail()">
+        <input type="text" id="id-input">
     </div>
     <div class="row">
         <label for="name-input">Name</label>

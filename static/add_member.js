@@ -10,10 +10,22 @@ function sendRequest(endpoint, parameters) {
     })
 }
 
+function setInfoText(info) {
+    let elem = document.getElementById("info-text");
+    elem.style = "";
+    elem.textContent = info;
+}
+
+let emailFieldEdited = false;
+let idField    = document.getElementById("id-input");
+let nameField  = document.getElementById("name-input");
+let emailField = document.getElementById("email-input");
+
+
 getGlobal().submit = function() {
-    let id    = document.getElementById("id-input").value;
-    let name  = document.getElementById("name-input").value;
-    let email = document.getElementById("email-input").value;
+    let id    = idField.value;
+    let name  = nameField.value;
+    let email = emailField.value;
 
     let params = new URLSearchParams();
     params.append("id", id);
@@ -24,36 +36,36 @@ getGlobal().submit = function() {
     infoElem.style = "display: none;";
 
     if (id === "" || name === "" || email === "") {
-        infoElem.style = "";
-        infoElem.textContent = "All fields are required";
+        setInfoText("All fields are required");
         return;
     }
 
     sendRequest("/add_member/", params)
-        .then(resp => resp.text())
-        .then(text => {
-            infoElem.style = "";
-            infoElem.textContent = text;
+        .then(resp => {
+            if (resp.status === 200) {
+                idField.value = "";
+                nameField.value = "";
+                emailField.value = "";
+                emailFieldEdited = false;
+            }
+            return resp.text()
         })
-        .catch(error => {
-            infoElem.style = "";
-            infoElem.textContent = error;
-        });
+        .then(text => setInfoText(text))
+        .catch(error => setInfoText(error));
 }
 
-getGlobal().setDefaultEmail = function() {
-    let idField    = document.getElementById("id-input");
-    let emailField = document.getElementById("email-input");
-
-    if (idField.value === "" || emailField.value !== "") {
+idField.oninput = function() {
+    if (emailFieldEdited) {
         return;
     }
 
-    emailField.value = idField.value + "@student.liu.se";
+    if (idField.value !== "") {
+        emailField.value = idField.value + "@student.liu.se";
+    } else {
+        emailField.value = "";
+    }
 }
 
-function setInfoText(info) {
-    let elem = document.getElementById("info-text");
-    elem.style = "";
-    elem.textContent = info;
-}
+emailField.oninput = function() {
+    emailFieldEdited = emailField.value !== "";
+};
