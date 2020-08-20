@@ -1,5 +1,15 @@
 {% extends "base.html" %}
+
+
+{% block scripts %}
+
+<script src="{{ url_for("static", filename="member_data.js") }}" defer></script>
+
+{% endblock %}
+
+
 {% block content %}
+
 <p id="json-data" style="display: none;">{{ json_data }}</p>
 
 <table>
@@ -29,6 +39,4 @@
     </tr>
 </table>
 
-<!-- Run script when all elements are loaded -->
-<script src="{{ url_for("static", filename="member_data.js") }}"></script>
 {% endblock %}
