@@ -272,7 +272,7 @@ def handle_add_member():
     success, message = add_member(*member_args)
 
     # If the member is successfully added, send them an email, unless we are testing.
-    if success and "testing" not in args:
+    if success and SENDER_PASSWORD != "dev":
         for action in ACTIONS:
             add_link(args["id"], action)
 
@@ -340,21 +340,25 @@ def handle_modify():
     return f"Successfully set '{args['field']}' to '{args['new']}' for '{args['id']}'", 200
 
 
-@app.route("/metrics/")
+@app.route("/members/")
 @admin_only
 def get_metrics():
     """
     Return information about the database.
-    Shows amount of members and active members for now.
+    Basically a JSON of the members and links in the database.
     """
-    members = query_db(SELECT_MEMBER)
-    active_members = len(query_db(SELECT_MEMBER_ACTIVE))
+    members = [member_to_dict(member) for member in query_db(SELECT_MEMBER)]
+    links = get_links()
 
-    return jsonify({
-        "member_count": len(members),
-        "active_members": active_members,
-        "members": [member_to_dict(member) for member in members]
-    })
+    members.sort(key=lambda member: member["id"])
+
+    for member in members:
+        if member["id"] in links:
+            member["links"] = links[member["id"]]
+        else:
+            member["links"] = []
+
+    return jsonify(members)
 
 
 @app.route("/member_count/")
@@ -441,6 +445,11 @@ def gui_add_member():
 @app.route("/gui/login/")
 def gui_login():
     return render_template("gui/login.html")
+
+
+@app.route("/gui/manage_members/")
+def gui_manage_members():
+    return render_template("gui/member_list.html")
 
 
 if __name__ == "__main__":

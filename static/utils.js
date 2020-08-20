@@ -18,3 +18,13 @@ export function getCookie(cname) {
 export function getGlobal() {
     return window;
 }
+
+export function sendRequest(endpoint, parameters) {
+    let bearer = getCookie("auth");
+    return fetch(endpoint + "?" + parameters.toString(), {
+        headers: new Headers({
+            "Authorization": "Bearer " + bearer,
+             'Content-Type': 'application/x-www-form-urlencoded'
+        })
+    })
+}

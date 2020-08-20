@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block scripts %}
+
+<script type="module" src="{{ url_for("static", filename="member_list.js") }}" defer></script>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div id="member-id-list">
+</div>
+
+{% endblock %}
+

@@ -1,14 +1,4 @@
-import { getCookie, getGlobal } from "./utils.js";
-
-function sendRequest(endpoint, parameters) {
-    let bearer = getCookie("auth");
-    return fetch(endpoint + "?" + parameters.toString(), {
-        headers: new Headers({
-            "Authorization": "Bearer " + bearer,
-             'Content-Type': 'application/x-www-form-urlencoded'
-        })
-    })
-}
+import { getGlobal, sendRequest } from "./utils.js";
 
 function setInfoText(info) {
     let elem = document.getElementById("info-text");
