@@ -114,6 +114,9 @@ td:nth-child(2) {
 div#member-id-list {
     display: flex;
     flex-grow: 1;
+    flex-wrap: wrap;
+
+    font-family: monospace;
 }
 
 div.member-id-list-entry {
