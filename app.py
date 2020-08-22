@@ -342,7 +342,7 @@ def handle_modify():
 
 @app.route("/members/")
 @admin_only
-def get_metrics():
+def get_members():
     """
     Return information about the database.
     Basically a JSON of the members and links in the database.
