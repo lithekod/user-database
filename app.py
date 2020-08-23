@@ -330,6 +330,8 @@ def handle_modify():
                 .format(args['new'], args['field']))
 
     try:
+        # FIXME: I no longer think this is a good idea.
+        #
         # Formatting the query with user input is insecure
         # but we have already verified that the
         # field argument is valid and not malicious.
@@ -346,10 +348,19 @@ def get_members():
     """
     Return information about the database.
     Basically a JSON of the members and links in the database.
+    If a member id is specified in the arguments, return only that member.
     """
-    members = [member_to_dict(member) for member in query_db(SELECT_MEMBER)]
     links = get_links()
+    if "id" in request.args:
+        member = query_db(SELECT_MEMBER_WITH_ID, [request.args["id"]], True)
+        if member is None:
+            return "No such member", 400
 
+        member = member_to_dict(member)
+        member["links"] = links[member["id"]]
+        return jsonify(member)
+
+    members = [member_to_dict(member) for member in query_db(SELECT_MEMBER)]
     members.sort(key=lambda member: member["id"])
 
     for member in members:
@@ -450,6 +461,11 @@ def gui_login():
 @app.route("/gui/manage_members/")
 def gui_manage_members():
     return render_template("gui/member_list.html")
+
+
+@app.route("/gui/manage_members/<member_id>")
+def gui_edit_member(member_id):
+    return render_template("gui/edit_member.html", member_id=member_id)
 
 
 if __name__ == "__main__":

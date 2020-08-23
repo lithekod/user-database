@@ -9,7 +9,8 @@ sendRequest("/members/", new URLSearchParams())
             let classAttribute = document.createAttribute("class");
             classAttribute.value = "member-id-list-entry";
             elem.attributes.setNamedItem(classAttribute);
-            elem.textContent = member.id;
+            elem.innerHTML = "<a href=\"/gui/manage_members/" + member.id +
+                "\">" + member.id + "</a>";
             container.appendChild(elem);
         });
     });

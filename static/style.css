@@ -73,6 +73,10 @@ body {
     max-width: fit-content;
 }
 
+#content a, #content a:visited {
+    color: var(--link-color);
+}
+
 .no-bottom-margin {
     margin-bottom: 0;
 }

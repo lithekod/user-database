@@ -1,0 +1,47 @@
+{% extends "base_auth.html" %}
+
+
+{% block scripts %}
+
+{{ super() }}
+<script>var member_id = "{{ member_id }}"</script>
+<script type="module" src="{{ url_for("static", filename="edit_member.js") }}" defer></script>
+
+{% endblock %}
+
+
+{% block content %}
+
+<form>
+    <div class="row">
+        <label for="id-input">Liuid</label>
+        <p id="id-input" style="padding: 0.75em"></p>
+    </div>
+    <div class="row">
+        <label for="name-input">Name</label>
+        <input type="text" id="name-input">
+    </div>
+    <div class="row">
+        <label for="email-input">Email</label>
+        <input type="text" id="email-input">
+    </div>
+    <div class="row">
+        <label for="joined-input">Joined</label>
+        <input type="text" id="joined-input">
+    </div>
+    <div class="row">
+        <label for="renewed-input">Renewed</label>
+        <input type="text" id="renewed-input">
+    </div>
+    <div class="row">
+        <label>Subscribed</label>
+        <button type="button" id="subscribed-input">no</button>
+    </div>
+</form>
+
+<ul id="link-list">
+</ul>
+
+<p id="info-text" style="display: none;" class="no-bottom-margin"></p>
+
+{% endblock %}
