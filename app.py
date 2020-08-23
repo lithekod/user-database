@@ -217,7 +217,7 @@ def handle_link(link):
     member = query_db(SELECT_MEMBER_WITH_ID, (member_id,), True)
     liuid, name, email, joined, renewed, receive_email = member
 
-    resp = "Unknown link", 400
+    resp = render_template("gui/message.html", message="Unknown link")
 
     if action_id == "SHOW":
         json_data = json.dumps(member_to_dict(member))
@@ -226,16 +226,22 @@ def handle_link(link):
     elif action_id == "RENEW":
         modify_db(UPDATE_MEMBER_RENEW, (liuid,))
         modify_db(DELETE_LINK_WITH_IDS, (liuid, action_id))
-        resp = "Your membership has been renewed!", 200
+        message = "Your membership has been renewed!"
+        resp = render_template("gui/message.html", message=message)
 
     elif action_id == "DELETE":
-        modify_db(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
-        modify_db(DELETE_MEMBER_WITH_ID, (liuid,))
-        resp = "You have now left LiTHe kod. We hope you enjoyed your stay!", 200
+        if "confirm" not in request.args:
+            message = "<a href=\"/" + url + "?confirm=true\">Confirm</a>"
+        else:
+            modify_db(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
+            modify_db(DELETE_MEMBER_WITH_ID, (liuid,))
+            message = "You have now left LiTHe kod. We hope you enjoyed your stay!"
+        resp = render_template("gui/message.html", message=message)
 
     elif action_id == "UNSUBSCRIBE":
         modify_db(UPDATE_MEMBER_UNSUBSCRIBE, (liuid,))
-        resp = "You are no longer subscribed to emails from LiTHe kod.", 200
+        message = "You are no longer subscribed to emails from LiTHe kod."
+        resp = render_template("gui/message.html", message=message)
 
     return resp
 
@@ -272,19 +278,21 @@ def handle_add_member():
     success, message = add_member(*member_args)
 
     # If the member is successfully added, send them an email, unless we are testing.
-    if success and SENDER_PASSWORD != "dev":
+    if success:
         for action in ACTIONS:
             add_link(args["id"], action)
 
-        with open("email-templates/welcome.html") as f:
-            html = f.read()
+        if SENDER_PASSWORD != "dev":
 
-        send_mail(
-            get_mailing_list(args["id"]),
-            "Welcome to LiTHe kod!",
-            html,
-            get_links()
-        )
+            with open("email-templates/welcome.html") as f:
+                html = f.read()
+
+            send_mail(
+                get_mailing_list(args["id"]),
+                "Welcome to LiTHe kod!",
+                html,
+                get_links()
+            )
 
     return message, 200 if success else 400
 
