@@ -45,22 +45,26 @@ def admin_only(f):
             return "Invalid authorization. Try reloading.", 401
 
         auth_type, token = auth
-        if auth_type != "Bearer":
-            return "No bearer token specified", 401
+        if auth_type == "Bearer":
+            tok = query_db(SELECT_TOKEN_WITH_ID, (token,), one=True)
 
-        tok = query_db(SELECT_TOKEN_WITH_ID, (token,), one=True)
+            if tok is None:
+                return "Unauthorized", 401
 
-        if tok is None:
-            return "Unauthorized", 401
+            token_id, email, issued = tok
 
-        token_id, email, issued = tok
+            #FIXME: use datetime.datetime.fromisoformat when 3.8 is available
+            fmt = "%Y-%m-%d %H:%M:%S"
+            issued = datetime.datetime.strptime(issued, fmt).timestamp()
 
-        #FIXME: use datetime.datetime.fromisoformat when 3.8 is available
-        fmt = "%Y-%m-%d %H:%M:%S"
-        issued = datetime.datetime.strptime(issued, fmt).timestamp()
+            if issued + 21600 < now:
+                return "Unauthorized", 401
 
-        if issued + 21600 < now:
-            return "Unauthorized", 401
+        elif auth_type == "Basic":
+            if request.authorization["password"] != SECRET_KEY:
+                return "Unauthorized token", 401
+        else:
+            return "Unknown auth type", 401
 
         return f(*args, **kwargs)
 
