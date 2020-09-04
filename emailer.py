@@ -35,7 +35,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
     :param html str: HTML template to be rendered.
     :param links dict: Links to actions for users.
     """
-    TIME_BETWEEN_EMAILS = 5
+    TIME_BETWEEN_EMAILS = 5 if len(receivers) > 1 else 0
 
     timestamp = datetime.now().timestamp()
     deadline = datetime.fromtimestamp(timestamp + 365 / 2 * 24 * 3600).strftime("%Y-%m-%d")
