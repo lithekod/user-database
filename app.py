@@ -30,7 +30,10 @@ from db import *
 
 def admin_only(f):
     """
-    Wraps endpoint so that it will require SECRET_KEY.
+    Wraps endpoint so that it will require authorization.
+    Authorization is done using either a SECRET_KEY with basic
+    authorization, where the username is empty. Or, using a
+    bearer token received from the /login/ endpoint.
     """
     @wraps(f)
     def decorated_fn(*args, **kwargs):
@@ -73,6 +76,14 @@ def admin_only(f):
 
 @app.route("/login/", methods=["POST"])
 def login():
+    """
+    Log in a specific user. To log in, POST a json with a google oauth2_token.
+    The token must have been received from logging in to the LiTHe kod database
+    app and the user must have logged in with a @lithekod.se email.
+
+    This endpoint returns a bearer token that is active for 6 hours after
+    being issued.
+    """
     token = request.get_json()["token"]
 
     CLIENT_ID = "235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
@@ -256,7 +267,7 @@ def handle_add_member():
     """
     Handle adding new members to the database.
     Not all arguments has to be specified in order for a user to be added.
-    The 'testing' argument will prevent this function from sending emails.
+    Only id and name is required.
     """
     args = request.args
 
@@ -281,7 +292,6 @@ def handle_add_member():
 
     success, message = add_member(*member_args)
 
-    # If the member is successfully added, send them an email, unless we are testing.
     if success:
         for action in ACTIONS:
             add_link(args["id"], action)
@@ -369,17 +379,14 @@ def get_members():
             return "No such member", 400
 
         member = member_to_dict(member)
-        member["links"] = links[member["id"]]
+        member["links"] = links.get(member["id"], [])
         return jsonify(member)
 
     members = [member_to_dict(member) for member in query_db(SELECT_MEMBER)]
     members.sort(key=lambda member: member["id"])
 
     for member in members:
-        if member["id"] in links:
-            member["links"] = links[member["id"]]
-        else:
-            member["links"] = []
+        member["links"] = links.get(member["id"], [])
 
     return jsonify(members)
 

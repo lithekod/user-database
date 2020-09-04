@@ -34,6 +34,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
     :param subject str: Subject of emails.
     :param html str: HTML template to be rendered.
     :param links dict: Links to actions for users.
+    :param interactive bool: Enables retrying of sending emails. (requires input)
     """
     TIME_BETWEEN_EMAILS = 5 if len(receivers) > 1 else 0
 
