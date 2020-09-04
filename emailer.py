@@ -86,9 +86,14 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
                 retry = False
                 time.sleep(TIME_BETWEEN_EMAILS)
             except Exception as e:
-                retry_message = "{}\nFailed sending mail to {} - retry? (Y/n): "\
+                retry_message = "{}\nFailed sending mail to {} - retry? (Y/n/skip): "\
                                 .format(e, liu_id)
-                retry = interactive and input(retry_message).lower() != "n"
+                ans = input(retry_message).lower()
+
+                if ans == "n":
+                    return
+
+                retry = interactive and ans != "skip"
 
 
 if __name__ == "__main__":
