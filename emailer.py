@@ -1,3 +1,5 @@
+import time
+import argparse
 import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -24,7 +26,7 @@ def try_construct_link(liu_id, action, links):
     return "http://{}/404".format(SERVER_URL)
 
 
-def send_mail(receivers, subject, html, links={}):
+def send_mail(receivers, subject, html, links={}, interactive=False):
     """
     Send emails to receivers.
 
@@ -33,6 +35,7 @@ def send_mail(receivers, subject, html, links={}):
     :param html str: HTML template to be rendered.
     :param links dict: Links to actions for users.
     """
+    TIME_BETWEEN_EMAILS = 5
 
     timestamp = datetime.now().timestamp()
     deadline = datetime.fromtimestamp(timestamp + 365 / 2 * 24 * 3600).strftime("%Y-%m-%d")
@@ -70,9 +73,51 @@ def send_mail(receivers, subject, html, links={}):
         message.attach(part1)
         message.attach(part2)
 
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(
-                SENDER_EMAIL, receiver_email, message.as_string()
-            )
+        retry = True
+        while retry:
+            try:
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    server.sendmail(
+                        SENDER_EMAIL, receiver_email, message.as_string()
+                    )
+                retry = False
+                time.sleep(TIME_BETWEEN_EMAILS)
+            except Exception as e:
+                retry_message = "{}\nFailed sending mail to {} - retry? (Y/n): "\
+                                .format(e, liu_id)
+                retry = interactive and input(retry_message).lower() != "n"
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Send emails to members")
+
+    parser.add_argument("-r", "--receivers",
+                        nargs=1,
+                        required=True,
+                        help="Either one of the values: 'default', 'all',\
+                              'inactive' or a space-separated list of liuids.")
+
+    parser.add_argument("-s", "--subject",
+                        nargs=1,
+                        required=True,
+                        help="Email subject")
+
+    parser.add_argument("-t", "--template",
+                        nargs=1,
+                        required=True,
+                        help="Email template")
+
+    args = parser.parse_args()
+
+    import app
+
+    with app.app.app_context():
+        receivers = app.get_mailing_list(args.receivers[0])
+        links = app.get_links()
+    subject = args.subject[0]
+    template = open(args.template[0]).read()
+
+    send_mail(receivers, subject, template, links, interactive=True)
