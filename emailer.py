@@ -1,3 +1,4 @@
+import sys
 import time
 import argparse
 import smtplib, ssl
@@ -83,17 +84,22 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
                     server.sendmail(
                         SENDER_EMAIL, receiver_email, message.as_string()
                     )
+
+                print("Sent email to: {}".format(liu_id), file=sys.stdout)
+
                 retry = False
                 time.sleep(TIME_BETWEEN_EMAILS)
             except Exception as e:
-                retry_message = "{}\nFailed sending mail to {} - retry? (Y/n/skip): "\
-                                .format(e, liu_id)
-                ans = input(retry_message).lower()
+                print(e, file=sys.stderr)
+                if interactive:
+                    retry_message = "{}\nFailed sending mail to {} - retry? (Y/n/skip): "\
+                                    .format(e, liu_id)
+                    ans = input(retry_message).lower()
 
-                if ans == "n":
-                    return
+                    if ans == "n":
+                        return
 
-                retry = interactive and ans != "skip"
+                    retry = ans != "skip"
 
 
 if __name__ == "__main__":
