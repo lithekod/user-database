@@ -216,6 +216,18 @@ def regenerate_links():
     return get_links()
 
 
+def create_missing_links():
+    """
+    Generate missing links for all users.
+    No links are deleted.
+    """
+    links = get_links()
+    for (liuid,) in query_db(SELECT_MEMBER_ID):
+        for action in ACTIONS:
+            if liuid not in links or action not in links[liuid]:
+                print(add_link(liuid, action))
+
+
 @app.route("/<link>")
 def handle_link(link):
     """
