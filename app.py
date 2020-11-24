@@ -258,7 +258,7 @@ def handle_link(link):
 
     elif action_id == "DELETE":
         if "confirm" not in request.args:
-            message = "<a href=\"/" + url + "?confirm=true\">Confirm</a>"
+            message = "<p style='margin: 0;'>End membership? (Cannot be reversed)</p><a href=\"/" + url + "?confirm=true\">Confirm</a>"
         else:
             modify_db(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
             modify_db(DELETE_MEMBER_WITH_ID, (liuid,))
