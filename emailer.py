@@ -85,7 +85,8 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
                         SENDER_EMAIL, receiver_email, message.as_string()
                     )
 
-                print("Sent email to: {}".format(liu_id), file=sys.stdout)
+                if interactive:
+                    print("Sent email to: {}".format(liu_id), file=sys.stdout)
 
                 retry = False
                 time.sleep(TIME_BETWEEN_EMAILS)
