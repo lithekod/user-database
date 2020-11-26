@@ -499,5 +499,28 @@ def gui_edit_member(member_id):
     return render_template("gui/edit_member.html", member_id=member_id)
 
 
+@app.route("/leaderboard/")
+def aoc_leaderboard():
+    """ Get the current standings in AoC. """
+    import json
+    with open("aoc/aoc_standings.json", "r") as f:
+        standings_json = json.loads(f.read())
+
+    contestants = []
+    for member_id in standings_json["members"]:
+        m = standings_json["members"][member_id]
+        if m["name"] is not None:
+            contestants.append((int(m["stars"]), int(m["local_score"]), m["name"]))
+        else:
+            contestants.append((int(m["stars"]), int(m["local_score"]), "Anon." + m["id"]))
+
+    sorting = lambda x: x[0] * 1000 + x[1]
+    raised = sum(map(lambda x: x[0] * 10, contestants))
+    placements = [(x[0], x[1][0], x[1][2]) for x in enumerate(sorted(contestants, key=sorting, reverse=True))]
+    return render_template("aoc_leaderboard.html",
+                           raised=raised,
+                           contestants=placements)
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5001)
