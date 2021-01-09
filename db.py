@@ -1,8 +1,8 @@
 import sqlite3
 
-from flask import g
+from config import ACTIONS
 
-from config import *
+from flask import g, current_app
 
 def get_db():
     """
@@ -11,7 +11,7 @@ def get_db():
     """
     db = getattr(g, "_database", None)
     if db is None:
-        g._database = sqlite3.connect(DATABASE_PATH)
+        g._database = sqlite3.connect(current_app.config["DATABASE_PATH"])
         db = g._database
 
     return db

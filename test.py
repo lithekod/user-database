@@ -5,18 +5,14 @@ import os
 
 from db import *
 from util import *
-from config import SECRET_KEY, DATABASE_PATH
 from app import app
 
-# Only run tests in a debug environment.
-# We don't want to delete the production database.
-if SECRET_KEY != "dev":
-    exit()
+app.config["DATABASE_PATH"] = "/tmp/lithekod_test.db"
 
 def reset_db():
     """ Reset the database. """
     try:
-        os.remove(DATABASE_PATH)
+        os.remove(app.config["DATABASE_PATH"])
     except OSError:
         pass
 

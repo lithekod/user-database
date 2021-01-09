@@ -26,6 +26,8 @@ from util import *
 
 app = Flask(__name__)
 
+app.config["DATABASE_PATH"] = DATABASE_PATH
+
 from db import *
 
 def admin_only(f):
