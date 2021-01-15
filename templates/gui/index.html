@@ -1,5 +1,15 @@
 {% extends "base.html" %}
+
+
+{% block scripts %}
+
+<script src="{{ url_for("static", filename="member_count.js") }}" defer></script>
+
+{% endblock %}
+
+
 {% block content %}
+
 <p style="margin-top: 0;">
     Active members: <span id="active-members">fetching..</span>
 </p>
@@ -8,7 +18,6 @@
 </p>
 <a href="/gui/add_member/"><button>Add member</button></a>
 <a href="/gui/manage_members/"><button>Manage members</button></a>
+<a href="/gui/send_emails/"><button>Send emails</button></a>
 
-<!-- Run script when all elements are loaded -->
-<script src="{{ url_for("static", filename="member_count.js") }}"></script>
 {% endblock %}

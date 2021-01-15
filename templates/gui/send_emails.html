@@ -1,0 +1,36 @@
+{% extends "base_auth.html" %}
+
+
+{% block scripts %}
+
+{{ super() }}
+<script type="module" src="{{ url_for("static", filename="send_emails.js") }}" async></script>
+
+{% endblock %}
+
+
+{% block content %}
+
+<h3 style="margin-top: 0;">Send emails</h2>
+
+<form>
+    <div class="row">
+        <label for="subject-input">Subject</label>
+        <input type="text" id="subject-input">
+    </div>
+    <div class="row">
+        <label for="receivers-input">Receivers</label>
+        <input type="text" id="receivers-input">
+    </div>
+    <div class="row">
+        <label for="template-input">Template</label>
+        <input type="text" id="template-input">
+    </div>
+</form>
+
+<div style="text-align: right;">
+    <button onclick="submit()">Send</button>
+</div>
+<p id="info-text" class="no-bottom-margin" style="display: none;"></p>
+
+{% endblock %}

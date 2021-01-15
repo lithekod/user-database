@@ -5,8 +5,6 @@ import sqlite3
 
 from os import environ
 
-from threading import Thread
-
 from functools import wraps
 
 from flask import Flask
@@ -463,10 +461,9 @@ def email_members():
     with open("email-templates/{}.html".format(template)) as f:
         html = f.read()
 
-    Thread(target=send_mail, args=(get_mailing_list(receivers), subject, html,
-        get_links())).run()
+    send_mail(get_mailing_list(receivers), subject, html, get_links())
 
-    return "Emails are being sent!", 200
+    return "Emails have been sent!", 200
 
 
 @app.teardown_appcontext
@@ -499,6 +496,11 @@ def gui_manage_members():
 @app.route("/gui/manage_members/<member_id>")
 def gui_edit_member(member_id):
     return render_template("gui/edit_member.html", member_id=member_id)
+
+
+@app.route("/gui/send_emails/")
+def gui_send_emails():
+    return render_template("gui/send_emails.html")
 
 
 @app.route("/leaderboard/")
