@@ -24,7 +24,11 @@
     </div>
     <div class="row">
         <label for="template-input">Template</label>
-        <input type="text" id="template-input">
+        <select name="template-input" id="template-input">
+            {% for template in templates %}
+                <option value="{{ template }}">{{ template }}</option>
+            {% endfor %}
+        </select>
     </div>
 </form>
 

@@ -50,7 +50,7 @@ body {
     margin: 0 auto;
 }
 
-#content input, #content button {
+#content input, #content button, #content select {
     font-size: 1em;
 
     padding: 0.5em;
@@ -67,6 +67,12 @@ body {
 #content button:hover {
     color: var(--link-color);
     border-color: var(--link-color);
+}
+
+#content select {
+    /* And this is why web development is garbage */
+    width: 11.68em;
+    width: -webkit-fill-available;
 }
 
 #content #info-text {

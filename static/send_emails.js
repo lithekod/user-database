@@ -14,7 +14,7 @@ let templateField   = document.getElementById("template-input");
 getGlobal().submit = function() {
     let subject    = subjectField.value;
     let receivers  = receiversField.value;
-    let template = templateField.value;
+    let template   = templateField.value;
 
     let params = new URLSearchParams();
     params.append("subject", subject);

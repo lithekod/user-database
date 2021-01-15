@@ -3,7 +3,7 @@ import json
 import datetime
 import sqlite3
 
-from os import environ
+from os import environ, listdir
 
 from functools import wraps
 
@@ -500,7 +500,9 @@ def gui_edit_member(member_id):
 
 @app.route("/gui/send_emails/")
 def gui_send_emails():
-    return render_template("gui/send_emails.html")
+    # Strip the .html
+    templates = [filename[:-5] for filename in listdir("email-templates")]
+    return render_template("gui/send_emails.html", templates=templates)
 
 
 @app.route("/leaderboard/")
