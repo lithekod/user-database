@@ -115,23 +115,27 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
 
 def run_as_server():
     """
-    Wait for pickled files of email instructions, and then send the emails.
+    Wait for pickled files of email instructions, then send the emails.
     """
     import pickle
+    import signal
     from os import listdir, remove
 
-    PICKLE_NAME = "emailpickle"
+    def sig_handler(_signr, _frame):
+        PICKLE_NAME = "emailpickle"
+        if PICKLE_NAME in listdir("."):
+            with open(PICKLE_NAME, "br") as f:
+                args = pickle.load(f)
+            remove(PICKLE_NAME)
+            send_mail(*args)
+
+    signal.signal(signal.SIGUSR1, sig_handler)
 
     try:
         while True:
-            if PICKLE_NAME in listdir("."):
-                with open(PICKLE_NAME, "br") as f:
-                    send_mail(*pickle.load(f))
-                remove(PICKLE_NAME)
-            time.sleep(10)
+            signal.pause()
     except Exception:
         return
-
 
 
 if __name__ == "__main__":

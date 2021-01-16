@@ -3,8 +3,9 @@ import json
 import datetime
 import sqlite3
 import pickle
+import signal
 
-from os import environ, listdir
+from os import environ, listdir, kill
 
 from functools import wraps
 
@@ -26,6 +27,10 @@ from util import *
 app = Flask(__name__)
 
 app.config["DATABASE_PATH"] = DATABASE_PATH
+try:
+    app.config["EMAILER_PID"] = int(open("/tmp/emailerpid").read())
+except:
+    pass
 
 from db import *
 
@@ -462,10 +467,13 @@ def email_members():
     with open("email-templates/{}.html".format(template)) as f:
         html = f.read()
 
+    # Create pickle file and notify the emailer
     with open("emailpickle", "bw") as f:
         pickle.dump((get_mailing_list(receivers), subject, html, get_links()), f)
 
-    return "Emails have been sent!", 200
+    kill(app.config["EMAILER_PID"], signal.SIGUSR1)
+
+    return "Emails are being sent!", 200
 
 
 @app.teardown_appcontext
