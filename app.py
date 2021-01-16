@@ -2,6 +2,7 @@ import uuid
 import json
 import datetime
 import sqlite3
+import pickle
 
 from os import environ, listdir
 
@@ -461,7 +462,8 @@ def email_members():
     with open("email-templates/{}.html".format(template)) as f:
         html = f.read()
 
-    send_mail(get_mailing_list(receivers), subject, html, get_links())
+    with open("emailpickle", "bw") as f:
+        pickle.dump((get_mailing_list(receivers), subject, html, get_links()), f)
 
     return "Emails have been sent!", 200
 

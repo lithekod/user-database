@@ -38,6 +38,12 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
     :param interactive bool: Enables retrying of sending emails. (requires input)
     """
     TIME_BETWEEN_EMAILS = 5 if len(receivers) > 1 else 0
+    if interactive:
+        LOG_FILE = sys.stdout
+    else:
+        current_time = datetime.now().strftime("%Y-%m-%dat%H:%M:%S")
+        LOG_FILE = open("logs/emaillog_{}".format(current_time), "w")
+
 
     timestamp = datetime.now().timestamp()
     deadline = datetime.fromtimestamp(timestamp + 365 / 2 * 24 * 3600).strftime("%Y-%m-%d")
@@ -85,13 +91,12 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
                         SENDER_EMAIL, receiver_email, message.as_string()
                     )
 
-                if interactive:
-                    print("Sent email to: {}".format(liu_id), file=sys.stdout)
+                print("Sent email to: {}".format(liu_id), file=LOG_FILE, flush=True)
 
                 retry = False
                 time.sleep(TIME_BETWEEN_EMAILS)
             except Exception as e:
-                print(e, file=sys.stderr)
+                print(e, file=LOG_FILE, flush=True)
                 if interactive:
                     retry_message = "{}\nFailed sending mail to {} - retry? (Y/n/skip): "\
                                     .format(e, liu_id)
@@ -101,9 +106,39 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
                         return
 
                     retry = ans != "skip"
+                else:
+                    retry = False
+
+    if not interactive:
+        LOG_FILE.close()
+
+
+def run_as_server():
+    """
+    Wait for pickled files of email instructions, and then send the emails.
+    """
+    import pickle
+    from os import listdir, remove
+
+    PICKLE_NAME = "emailpickle"
+
+    try:
+        while True:
+            if PICKLE_NAME in listdir("."):
+                with open(PICKLE_NAME, "br") as f:
+                    send_mail(*pickle.load(f))
+                remove(PICKLE_NAME)
+            time.sleep(10)
+    except Exception:
+        return
+
 
 
 if __name__ == "__main__":
+
+    if "server" in sys.argv:
+        run_as_server()
+        exit()
 
     parser = argparse.ArgumentParser(description="Send emails to members")
 

@@ -4,6 +4,10 @@ if [[ ! -d logs ]]; then
     mkdir logs
 fi
 
+killall emailer
+python3 emailer.py server &
+disown %python3
+
 sudo killall gunicorn
 sudo gunicorn \
     --bind localhost:8000 \
