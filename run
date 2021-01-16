@@ -4,7 +4,7 @@ if [[ ! -d logs ]]; then
     mkdir logs
 fi
 
-killall emailer
+killall python3
 python3 emailer.py server &
 disown %python3
 
