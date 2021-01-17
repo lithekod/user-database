@@ -476,6 +476,16 @@ def email_members():
     return "Emails are being sent!", 200
 
 
+@app.route("/secret/mailupdate", methods=["POST"])
+def secret_mailupdate():
+    """
+    Update the mail templates if we receive a correct secret key.
+    """
+    data = request.get_json()
+    with open("jsontest", "w") as f:
+        f.write(str(data))
+
+
 @app.teardown_appcontext
 def close_connection(e):
     db = getattr(g, "_database", None)
