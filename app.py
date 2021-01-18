@@ -501,7 +501,9 @@ def secret_mailupdate():
         return "Not pushed to master, no action taken.", 200
 
     import subprocess
-    if subprocess.run(["git", "pull"], cwd="emails").returncode != 0:
+    try:
+        subprocess.run(["git", "pull"], cwd="emails")
+    except Exception:
         subprocess.run(["git", "clone", "git@github.com:lithekod/emails"])
 
     return "Emails updated successfully", 200

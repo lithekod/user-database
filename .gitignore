@@ -16,3 +16,4 @@ tags
 logs/
 
 config.py
+emails/
