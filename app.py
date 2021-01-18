@@ -316,7 +316,7 @@ def handle_add_member():
 
         if SENDER_PASSWORD != "dev":
 
-            with open("email-templates/welcome.html") as f:
+            with open("emails/welcome.html") as f:
                 html = f.read()
 
             send_mail(
@@ -464,7 +464,7 @@ def email_members():
         return "No template spcified.", 400
     template = args["template"]
 
-    with open("email-templates/{}.html".format(template)) as f:
+    with open("emails/{}.html".format(template)) as f:
         html = f.read()
 
     # Create pickle file and notify the emailer
@@ -499,6 +499,10 @@ def secret_mailupdate():
 
     if data["ref"] != "refs/heads/master":
         return "Not pushed to master, no action taken.", 200
+
+    import subprocess
+    if subprocess.run(["git", "pull"], cwd="emails").returncode != 0:
+        subprocess.run(["git", "clone", "git@github.com:lithekod/emails"])
 
     return "Emails updated successfully", 200
 
@@ -538,7 +542,7 @@ def gui_edit_member(member_id):
 @app.route("/gui/send_emails/")
 def gui_send_emails():
     # Strip the .html
-    templates = [filename[:-5] for filename in listdir("email-templates")]
+    templates = [filename[:-5] for filename in listdir("emails")]
     return render_template("gui/send_emails.html", templates=templates)
 
 
