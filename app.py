@@ -481,9 +481,26 @@ def secret_mailupdate():
     """
     Update the mail templates if we receive a correct secret key.
     """
+    def verify_signature(r):
+        """
+        Verify the signature of a request using the github secret
+        """
+        from hmac import HMAC, compare_digest
+        from hashlib import sha1
+        received_sign = r.headers.get("X-Hub-Signature").split("sha1=")[-1].strip()
+        secret = GITHUB_WEBHOOK_SECRET.encode()
+        expected_sign = HMAC(key=secret, msg=r.data, digestmod=sha1).hexdigest()
+        return compare_digest(received_sign, expected_sign)
+
+    if not verify_signature(request):
+        return "Unauthorized", 401
+
     data = request.get_json()
-    with open("jsontest", "w") as f:
-        f.write(str(data))
+
+    if data["ref"] != "refs/heads/master":
+        return "Not pushed to master, no action taken.", 200
+
+    return "Emails updated successfully", 200
 
 
 @app.teardown_appcontext
