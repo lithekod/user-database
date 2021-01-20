@@ -504,7 +504,7 @@ def secret_mailupdate():
     try:
         subprocess.run(["git", "pull"], cwd="emails")
     except Exception:
-        subprocess.run(["git", "clone", "git@github.com:lithekod/emails"])
+        subprocess.run(["git", "clone", "https://github.com/lithekod/emails.git"])
 
     return "Emails updated successfully", 200
 
