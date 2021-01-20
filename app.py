@@ -1,3 +1,4 @@
+import os
 import uuid
 import json
 import datetime
@@ -5,7 +6,9 @@ import sqlite3
 import pickle
 import signal
 
-from os import environ, listdir, kill
+import emails
+
+from os import environ, kill
 
 from functools import wraps
 
@@ -316,9 +319,7 @@ def handle_add_member():
 
         if SENDER_PASSWORD != "dev":
 
-            with open("emails/welcome.html") as f:
-                html = f.read()
-
+            html = emails.format_file("emails/general/welcome.tpl", "emails/template.html")
             send_mail(
                 get_mailing_list(args["id"]),
                 "Welcome to LiTHe kod!",
@@ -464,8 +465,7 @@ def email_members():
         return "No template spcified.", 400
     template = args["template"]
 
-    with open("emails/{}.html".format(template)) as f:
-        html = f.read()
+    html = emails.format_file("emails/general/{}.tpl".format(template), "emails/template.html")
 
     # Create pickle file and notify the emailer
     with open("emailpickle", "bw") as f:
@@ -543,17 +543,24 @@ def gui_edit_member(member_id):
 
 @app.route("/gui/send_emails/")
 def gui_send_emails():
-    # Strip the .html
-    templates = [filename[:-5] for filename in listdir("emails")]
+    dirs = [obj for obj in os.listdir("emails")
+            if os.path.isdir("emails/{}".format(obj))
+            and obj != "__pycache__"
+            and obj != ".git"]
+    dirs.sort(reverse=True)
+    templates = { d: sorted(os.listdir("emails/{}".format(d))) for d in dirs }
+
+    # Strip the suffixes
+    for l in templates.values():
+        for i, t in enumerate(l):
+            l[i] = t[:t.find(".")]
+
     return render_template("gui/send_emails.html", templates=templates)
 
 
 @app.route("/leaderboard/")
 def aoc_leaderboard():
     """ Get the current standings in AoC. """
-    import json
-    import os
-
     elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(STANDINGS_PATH)
 
     #if elapsed > 20 * 60:

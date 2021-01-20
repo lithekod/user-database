@@ -25,8 +25,12 @@
     <div class="row">
         <label for="template-input">Template</label>
         <select name="template-input" id="template-input">
-            {% for template in templates %}
-                <option value="{{ template }}">{{ template }}</option>
+            {% for dir in templates %}
+                <optgroup label="{{dir}}">
+                {% for template in templates[dir] %}
+                    <option value="{{ template }}">{{ template }}</option>
+                {% endfor %}
+                </optgroup>
             {% endfor %}
         </select>
     </div>
