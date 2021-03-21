@@ -497,9 +497,6 @@ def secret_mailupdate():
 
     data = request.get_json()
 
-    if data["ref"] != "refs/heads/master":
-        return "Not pushed to master, no action taken.", 200
-
     import subprocess
     try:
         subprocess.run(["git", "pull"], cwd="emails")
