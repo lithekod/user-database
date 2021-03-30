@@ -476,6 +476,22 @@ def email_members():
     return "Emails are being sent!", 200
 
 
+@app.route("/email_list/")
+@admin_only
+def email_list():
+    """
+    Get an email list for the specified receivers.
+    See get_mailing_list for valid values of 'receivers'.
+    """
+    args = request.args
+    if "receivers" not in args:
+        return "No receivers spcified.", 400
+
+    receivers = get_mailing_list(args["receivers"])
+
+    return jsonify(receivers)
+
+
 @app.route("/secret/mailupdate", methods=["POST"])
 def secret_mailupdate():
     """

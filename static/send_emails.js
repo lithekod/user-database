@@ -1,7 +1,9 @@
 import { getGlobal, sendRequest } from "./utils.js";
 
-function setInfoText(info) {
-    let elem = document.getElementById("info-text");
+let infoText = document.getElementById("info-text");
+let emailInfoText = document.getElementById("email-info-text");
+
+function setInfoText(elem, info) {
     elem.style = "";
     elem.textContent = info;
 }
@@ -10,6 +12,23 @@ let subjectField    = document.getElementById("subject-input");
 let receiversField  = document.getElementById("receivers-input");
 let templateField   = document.getElementById("template-input");
 
+receiversField.onchange = async function() {
+    let params = new URLSearchParams();
+    params.append("receivers", receiversField.value);
+
+    console.log("test");
+    sendRequest("/email_list/", params)
+        .then(resp => resp.json())
+        .then(receivers => {
+            if (receivers.length > 0) {
+                let p = receivers.length === 1 ? "person" : "people";
+                setInfoText(emailInfoText, `${receivers.length} ${p} will be emailed`)
+            } else {
+                emailInfoText.style = "display: none;";
+            }
+        })
+        .catch(error => setInfoText(infoText, error));
+}
 
 getGlobal().submit = function() {
     let subject    = subjectField.value;
@@ -21,13 +40,13 @@ getGlobal().submit = function() {
     params.append("receivers", receivers);
     params.append("template", template);
 
-    let infoElem = document.getElementById("info-text");
-    infoElem.style = "display: none;";
-
     if (subject === "" || receivers === "" || template === "") {
-        setInfoText("All fields are required");
+        setInfoText(infoText, "All fields are required");
         return;
     }
+
+    infoText.style = "display: none;";
+    emailInfoText.style = "display: none;";
 
     sendRequest("/email_members/", params)
         .then(resp => {
@@ -38,6 +57,6 @@ getGlobal().submit = function() {
             }
             return resp.text()
         })
-        .then(text => setInfoText(text))
-        .catch(error => setInfoText(error));
+        .then(text => setInfoText(infoText, text))
+        .catch(error => setInfoText(infoText, error));
 }
