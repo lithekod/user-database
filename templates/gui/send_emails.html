@@ -16,11 +16,21 @@
 <form>
     <div class="row">
         <label for="subject-input">Subject</label>
-        <input type="text" id="subject-input">
+        <input type="text" id="subject-input" list="subject-list">
+        <datalist id="subject-list">
+            <option value="{{ "LiTHe kod newsletter {}".format(today) }}">
+            <option value="Welcome to LiTHe kod!">
+            <option value="test">
+        </datalist>
     </div>
     <div class="row">
         <label for="receivers-input">Receivers</label>
-        <input type="text" id="receivers-input">
+        <input type="text" id="receivers-input" list="receivers-list">
+        <datalist id="receivers-list">
+            <option value="default">
+            <option value="all">
+            <option value="inactive">
+        </datalist>
     </div>
     <div class="row">
         <label for="template-input">Template</label>
