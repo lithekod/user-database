@@ -25,13 +25,11 @@
     <div class="row">
         <label for="template-input">Template</label>
         <select name="template-input" id="template-input">
-            {% for dir in templates %}
-                <optgroup label="{{dir}}">
-                {% for template in templates[dir] %}
+            <optgroup label="Recent">
+                {% for template in templates %}
                     <option value="{{ template }}">{{ template }}</option>
                 {% endfor %}
-                </optgroup>
-            {% endfor %}
+            </optgroup>
         </select>
     </div>
 </form>

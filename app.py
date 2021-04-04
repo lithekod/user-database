@@ -5,6 +5,7 @@ import datetime
 import sqlite3
 import pickle
 import signal
+import subprocess
 
 import emails
 
@@ -465,7 +466,7 @@ def email_members():
         return "No template spcified.", 400
     template = args["template"]
 
-    html = emails.format_file("emails/general/{}.tpl".format(template), "emails/template.html")
+    html = emails.format_file("emails/{}".format(template), "emails/template.html")
 
     # Create pickle file and notify the emailer
     with open("emailpickle", "bw") as f:
@@ -513,7 +514,6 @@ def secret_mailupdate():
 
     data = request.get_json()
 
-    import subprocess
     try:
         subprocess.run(["git", "pull"], cwd="emails")
     except Exception:
@@ -556,17 +556,22 @@ def gui_edit_member(member_id):
 
 @app.route("/gui/send_emails/")
 def gui_send_emails():
-    dirs = [obj for obj in os.listdir("emails")
-            if os.path.isdir("emails/{}".format(obj))
-            and obj != "__pycache__"
-            and obj != ".git"]
-    dirs.sort(reverse=True)
-    templates = { d: sorted(os.listdir("emails/{}".format(d))) for d in dirs }
+    # Get a list of all files in the "emails" directory.
+    files = subprocess.run(
+                "git ls-tree -r --name-only HEAD".split(),
+                cwd="emails",
+                capture_output=True
+            ).stdout.decode().split()
 
-    # Strip the suffixes
-    for l in templates.values():
-        for i, t in enumerate(l):
-            l[i] = t[:t.find(".")]
+    def last_changed(f):
+        """ Returns the unix timestamp of the last change to the file """
+        return int(subprocess.run(f"git log -1 --format=%at -- {f}".split(),
+                                  cwd="emails",
+                                  capture_output=True
+                   ).stdout.decode())
+
+    templates = [f for f in files if "/" in f and f.endswith(".tpl")]
+    templates.sort(reverse=True, key=lambda f: last_changed(f))
 
     return render_template("gui/send_emails.html", templates=templates)
 
