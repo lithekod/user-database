@@ -65,3 +65,9 @@ getGlobal().submit = function() {
         .then(text => setInfoText(infoText, text))
         .catch(error => setInfoText(infoText, error));
 }
+
+getGlobal().preview = function() {
+    const template = templateField.value;
+    const params = new URLSearchParams({ path: template }).toString();
+    window.open(`/gui/emails/?${params}`);
+}
