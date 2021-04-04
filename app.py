@@ -573,7 +573,9 @@ def gui_send_emails():
     templates = [f for f in files if "/" in f and f.endswith(".tpl")]
     templates.sort(reverse=True, key=lambda f: last_changed(f))
 
-    return render_template("gui/send_emails.html", templates=templates)
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    return render_template("gui/send_emails.html", templates=templates, today=today)
 
 
 @app.route("/leaderboard/")
