@@ -578,6 +578,15 @@ def gui_send_emails():
     return render_template("gui/send_emails.html", templates=templates, today=today)
 
 
+@app.route("/gui/emails/")
+def gui_view_email():
+    if "path" not in request.args:
+        return "No path specified", 400
+    path = request.args["path"]
+
+    return emails.format_file(f"emails/{path}", "emails/template.html")
+
+
 @app.route("/leaderboard/")
 def aoc_leaderboard():
     """ Get the current standings in AoC. """
