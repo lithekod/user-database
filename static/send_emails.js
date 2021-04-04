@@ -16,10 +16,10 @@ receiversField.onchange = async function() {
     let params = new URLSearchParams();
     params.append("receivers", receiversField.value);
 
-    console.log("test");
     sendRequest("/email_list/", params)
         .then(resp => resp.json())
         .then(receivers => {
+            // This check might be unnecessary
             if (receivers.length > 0) {
                 let p = receivers.length === 1 ? "person" : "people";
                 setInfoText(emailInfoText, `${receivers.length} ${p} will be emailed`)
@@ -31,6 +31,11 @@ receiversField.onchange = async function() {
 }
 
 getGlobal().submit = function() {
+
+    if (!confirm("Really send emails?")) {
+        return;
+    }
+
     let subject    = subjectField.value;
     let receivers  = receiversField.value;
     let template   = templateField.value;
