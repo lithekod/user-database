@@ -8,7 +8,7 @@ python3 emailer.py server &
 
 echo "$!" > /tmp/emailerpid
 
-sudo gunicorn \
+gunicorn \
     --bind localhost:8000 \
     --workers 2 \
     --reload \
