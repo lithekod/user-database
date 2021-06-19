@@ -16,7 +16,8 @@ def reset_db():
     except OSError:
         pass
 
-    init_db(app)
+    with app.app_context():
+        init_db()
 
 
 def app_get(path, get_data=False):

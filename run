@@ -5,8 +5,7 @@ if [[ ! -d logs ]]; then
 fi
 
 python3 emailer.py server &
-
-echo "$!" > /tmp/emailerpid
+export EMAILER_PID=$!
 
 gunicorn \
     --bind localhost:8000 \

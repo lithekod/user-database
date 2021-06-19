@@ -22,33 +22,27 @@ from flask import url_for
 from google.oauth2 import id_token as token_auth
 from google.auth.transport import requests
 
-from emailer import send_mail
-
 from queries import *
-from config import *
 from util import *
 
 app = Flask(__name__)
 
-app.config["DATABASE_PATH"] = DATABASE_PATH
-try:
-    app.config["EMAILER_PID"] = int(open("/tmp/emailerpid").read())
-except:
-    pass
+app.config.from_object("config.default")
+app.config.from_envvar("DATABASE_CONFIG", silent=True)
 
 from db import *
 
 def admin_only(f):
     """
     Wraps endpoint so that it will require authorization.
-    Authorization is done using either a SECRET_KEY with basic
+    Authorization is done using either a secret key with basic
     authorization, where the username is empty. Or, using a
     bearer token received from the /login/ endpoint.
     """
     @wraps(f)
     def decorated_fn(*args, **kwargs):
 
-        if SECRET_KEY == "dev":
+        if app.config["SECRET_KEY"] == "dev":
             return f(*args, **kwargs)
 
         now = datetime.datetime.now().timestamp()
@@ -71,7 +65,7 @@ def admin_only(f):
                 return "Unauthorized", 401
 
         elif auth_type == "Basic":
-            if request.authorization["password"] != SECRET_KEY:
+            if request.authorization["password"] != app.config["SECRET_KEY"]:
                 return "Unauthorized token", 401
         else:
             return "Unknown auth type", 401
@@ -177,7 +171,7 @@ def add_link(member_id, action):
     :param member_id str: id which the link should be linked with.
     :param action str: The action the link should perform.
     """
-    if action not in ACTIONS:
+    if action not in app.config["ACTIONS"]:
         return "Invalid action"
 
     url = "{}_{}".format(action, random_string(32 - len(action) - 1))
@@ -217,7 +211,7 @@ def regenerate_links():
     modify_db(DELETE_LINK, [])
 
     for (liuid,) in query_db(SELECT_MEMBER_ID):
-        for action in ACTIONS:
+        for action in app.config["ACTIONS"]:
             add_link(liuid, action)
 
     return get_links()
@@ -230,7 +224,7 @@ def create_missing_links():
     """
     links = get_links()
     for (liuid,) in query_db(SELECT_MEMBER_ID):
-        for action in ACTIONS:
+        for action in app.config["ACTIONS"]:
             if liuid not in links or action not in links[liuid]:
                 print(add_link(liuid, action))
 
@@ -239,7 +233,7 @@ def create_missing_links():
 def handle_link(link):
     """
     Handle a link and perform action related to the link.
-    Possible actions can be found in ACTIONS.
+    Possible actions can be found in app.config["ACTIONS"].
     """
     link = query_db(SELECT_LINK_WITH_URL, (link,), True)
 
@@ -315,18 +309,21 @@ def handle_add_member():
     success, message = add_member(*member_args)
 
     if success:
-        for action in ACTIONS:
+        for action in app.config["ACTIONS"]:
             add_link(args["id"], action)
 
-        if SENDER_PASSWORD != "dev":
+        if app.config["EMAIL_PASSWORD"] != "dev":
 
             html = emails.format_file("emails/general/welcome.tpl", "emails/template.html")
-            send_mail(
-                get_mailing_list(args["id"]),
-                "Welcome to LiTHe kod!",
-                html,
-                get_links()
-            )
+            with open("emailpickle", "bw") as f:
+                pickle.dump((
+                    get_mailing_list(args["id"]),
+                    "Welcome to LiTHe kod!",
+                    html,
+                    get_links()
+                ), f)
+
+            kill(app.config["EMAILER_PID"], signal.SIGUSR1)
 
     return message, 200 if success else 400
 
@@ -505,7 +502,7 @@ def secret_mailupdate():
         from hmac import HMAC, compare_digest
         from hashlib import sha1
         received_sign = r.headers.get("X-Hub-Signature").split("sha1=")[-1].strip()
-        secret = GITHUB_WEBHOOK_SECRET.encode()
+        secret = app.config["GITHUB_WEBHOOK_SECRET"].encode()
         expected_sign = HMAC(key=secret, msg=r.data, digestmod=sha1).hexdigest()
         return compare_digest(received_sign, expected_sign)
 
@@ -590,17 +587,17 @@ def gui_view_email():
 @app.route("/leaderboard/")
 def aoc_leaderboard():
     """ Get the current standings in AoC. """
-    elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(STANDINGS_PATH)
+    elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(app.config["STANDINGS_PATH"])
 
     #if elapsed > 20 * 60:
     #    import requests
     #    data = { "session": ""}
     #    result = requests.get("https://adventofcode.com/2020/leaderboard/private/view/637041.json", cookies=data)
-    #    with open(STANDINGS_PATH, "w") as f:
+    #    with open(app.config["STANDINGS_PATH"], "w") as f:
     #        f.write(result.text)
 
 
-    with open(STANDINGS_PATH, "r") as f:
+    with open(app.config["STANDINGS_PATH"], "r") as f:
         standings_json = json.loads(f.read())
 
     contestants = []
@@ -618,7 +615,7 @@ def aoc_leaderboard():
 
     if "some" in request.args:
         for i in range(len(contestants) - 1, -1, -1):
-            if contestants[i][2] in INVALID_CONTESTANTS:
+            if contestants[i][2] in app.config["INVALID_CONTESTANTS"]:
                 del contestants[i]
 
     placements = [(x[0], x[1][0], x[1][2]) for x in enumerate(sorted(contestants, key=sorting, reverse=True))]
