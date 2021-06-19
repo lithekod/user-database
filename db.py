@@ -1,7 +1,5 @@
 import sqlite3
 
-from config import ACTIONS
-
 from flask import g, current_app
 
 def get_db():
@@ -37,15 +35,14 @@ def modify_db(query, args):
     conn.commit()
 
 
-def init_db(app):
+def init_db():
     """
     Construct the tables in the database.
     Call this function once when setting up the server.
     """
-    with app.app_context():
-        db = get_db()
-        with app.open_resource("schema.sql", mode="r") as f:
-            db.cursor().executescript(f.read())
+    db = get_db()
+    with current_app.open_resource("schema.sql", mode="r") as f:
+        db.cursor().executescript(f.read())
 
-        db.executemany("INSERT INTO action VALUES (?)", [(i,) for i in ACTIONS])
-        db.commit()
+    db.executemany("INSERT INTO action VALUES (?)", [(i,) for i in current_app.config["ACTIONS"]])
+    db.commit()

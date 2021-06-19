@@ -11,7 +11,7 @@ from datetime import datetime
 
 from html2text import html2text
 
-from config import *
+from app import app
 
 def try_construct_link(liu_id, action, links):
     """
@@ -23,8 +23,8 @@ def try_construct_link(liu_id, action, links):
     :param links dict: Links to actions for users.
     """
     if liu_id in links and action in links[liu_id]:
-        return "http://{}/{}".format(SERVER_URL, links[liu_id][action])
-    return "http://{}/404".format(SERVER_URL)
+        return "http://{}/{}".format(app.config["SERVER_URL"], links[liu_id][action])
+    return "http://{}/404".format(app.config["SERVER_URL"])
 
 
 def send_mail(receivers, subject, html, links={}, interactive=False):
@@ -37,12 +37,12 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
     :param links dict: Links to actions for users.
     :param interactive bool: Enables retrying of sending emails. (requires input)
     """
-    TIME_BETWEEN_EMAILS = 5 if len(receivers) > 1 else 0
+    time_between_emails = 5 if len(receivers) > 1 else 0
     if interactive:
-        LOG_FILE = sys.stdout
+        log_file = sys.stdout
     else:
         current_time = datetime.now().strftime("%Y-%m-%dat%H:%M:%S")
-        LOG_FILE = open("logs/emaillog_{}".format(current_time), "w")
+        log_file = open("logs/emaillog_{}".format(current_time), "w")
 
 
     timestamp = datetime.now().timestamp()
@@ -56,7 +56,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
         unsubscribe_link = try_construct_link(liu_id, "UNSUBSCRIBE", links)
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = formataddr((str(Header('LiTHe kod', 'utf-8')), SENDER_EMAIL))
+        message["From"] = formataddr((str(Header('LiTHe kod', 'utf-8')), app.config["EMAIL_ADDRESS"]))
         message["To"] = receiver_email
 
         kwargs = {
@@ -86,17 +86,17 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
             try:
                 context = ssl.create_default_context()
                 with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    server.login(app.config["EMAIL_ADDRESS"], app.config["EMAIL_PASSWORD"])
                     server.sendmail(
-                        SENDER_EMAIL, receiver_email, message.as_string()
+                        app.config["EMAIL_ADDRESS"], receiver_email, message.as_string()
                     )
 
-                print("Sent email to: {}".format(liu_id), file=LOG_FILE, flush=True)
+                print("Sent email to: {}".format(liu_id), file=log_file, flush=True)
 
                 retry = False
-                time.sleep(TIME_BETWEEN_EMAILS)
+                time.sleep(time_between_emails)
             except Exception as e:
-                print(e, file=LOG_FILE, flush=True)
+                print(e, file=log_file, flush=True)
                 if interactive:
                     retry_message = "{}\nFailed sending mail to {} - retry? (Y/n/skip): "\
                                     .format(e, liu_id)
@@ -110,7 +110,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
                     retry = False
 
     if not interactive:
-        LOG_FILE.close()
+        log_file.close()
 
 
 def run_as_server():
@@ -121,6 +121,8 @@ def run_as_server():
     import signal
     from os import listdir, remove
 
+    # FIXME: Better names for pickle files and a lock to prevent concurrent
+    # emailing.
     def sig_handler(_signr, _frame):
         PICKLE_NAME = "emailpickle"
         if PICKLE_NAME in listdir("."):

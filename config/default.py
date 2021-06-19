@@ -1,8 +1,13 @@
+import os
+
 SECRET_KEY = "dev"
 GITHUB_WEBHOOK_SECRET = "dev"
 
-SENDER_EMAIL = "no-reply@lithekod.se"
-SENDER_PASSWORD = "dev"
+EMAIL_ADDRESS = "no-reply@lithekod.se"
+EMAIL_PASSWORD = "dev"
+EMAILER_PID = os.environ.get("EMAILER_PID")
+if EMAILER_PID is not None:
+    EMAILER_PID = int(EMAILER_PID)
 
 SERVER_URL = "localhost:5000"
 
