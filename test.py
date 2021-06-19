@@ -3,11 +3,23 @@ import base64
 import json
 import os
 
+from functools import wraps
+
 from db import *
 from util import *
 from app import app
 
-app.config["DATABASE_PATH"] = "/tmp/lithekod_test.db"
+app.config.from_object("config.testing")
+
+def with_app_context(test_fn):
+    """ Helper function for running tests in an app context. """
+    @wraps(test_fn)
+    def wrapped_fn(*args, **kwargs):
+        with app.app_context():
+            return test_fn(*args, **kwargs)
+
+    return wrapped_fn
+
 
 def reset_db():
     """ Reset the database. """
@@ -16,8 +28,7 @@ def reset_db():
     except OSError:
         pass
 
-    with app.app_context():
-        init_db()
+    init_db()
 
 
 def app_get(path, get_data=False):
@@ -32,6 +43,7 @@ def app_get(path, get_data=False):
 class TestIntegration(unittest.TestCase):
     """ Test using the database. """
 
+    @with_app_context
     def test_add_member(self):
         """ Test adding members to the database. """
         reset_db()
@@ -50,7 +62,7 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(app_get(f"{url}id=erima885&receive_email=yes&"), 400)
         self.assertEqual(app_get(f"{url}id=erima885&receive_email=1&"), 200)
 
-
+    @with_app_context
     def test_metrics(self):
         """ Test getting metrics about the database. """
         reset_db()
@@ -86,14 +98,12 @@ class TestValidation(unittest.TestCase):
         self.assertFalse(is_int("abc"))
         self.assertFalse(is_int("5.69"))
 
-
     def test_is_pnr(self):
         """ Test personal number validation """
         self.assertTrue(is_pnr("7402174820"))
         self.assertFalse(is_pnr("a"))
         self.assertFalse(is_pnr("123123123"))
         self.assertFalse(is_pnr("7402174821"))
-
 
     def test_is_liuid(self):
         """ Test liuid validation """
@@ -103,7 +113,6 @@ class TestValidation(unittest.TestCase):
         self.assertFalse(is_liuid("12345"))
         self.assertFalse(is_liuid("justastring"))
 
-
     def test_is_id(self):
         """ Test id validation """
         self.assertTrue(is_id("7402174820"))
@@ -111,12 +120,10 @@ class TestValidation(unittest.TestCase):
         self.assertFalse(is_id("7402174821"))
         self.assertFalse(is_id("justastring"))
 
-
     def test_is_email(self):
         """ Test email validation """
         self.assertTrue(is_email("generic.email@emails.com"))
         self.assertFalse(is_email("notemail"))
-
 
     def test_is_date(self):
         """ Test date validation """
@@ -126,7 +133,6 @@ class TestValidation(unittest.TestCase):
         self.assertFalse(is_date("2019/12/31"))
         self.assertFalse(is_date("100"))
 
-
     def test_is_bool(self):
         """ Test sqlite3 bool validation """
         self.assertTrue(is_bool(0))
@@ -135,7 +141,6 @@ class TestValidation(unittest.TestCase):
         self.assertTrue(is_bool("1"))
         self.assertFalse(is_bool(2))
         self.assertFalse(is_bool("2"))
-
 
     def test_member_to_dict(self):
         """ Test member to dict/JSON """
