@@ -1,7 +1,6 @@
 import os
 
 SECRET_KEY = "dev"
-GITHUB_WEBHOOK_SECRET = "dev"
 
 EMAIL_ADDRESS = "no-reply@lithekod.se"
 EMAIL_PASSWORD = "dev"

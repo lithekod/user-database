@@ -490,35 +490,6 @@ def email_list():
     return jsonify(receivers)
 
 
-@app.route("/secret/mailupdate", methods=["POST"])
-def secret_mailupdate():
-    """
-    Update the mail templates if we receive a correct secret key.
-    """
-    def verify_signature(r):
-        """
-        Verify the signature of a request using the github secret
-        """
-        from hmac import HMAC, compare_digest
-        from hashlib import sha1
-        received_sign = r.headers.get("X-Hub-Signature").split("sha1=")[-1].strip()
-        secret = app.config["GITHUB_WEBHOOK_SECRET"].encode()
-        expected_sign = HMAC(key=secret, msg=r.data, digestmod=sha1).hexdigest()
-        return compare_digest(received_sign, expected_sign)
-
-    if not verify_signature(request):
-        return "Unauthorized", 401
-
-    data = request.get_json()
-
-    try:
-        subprocess.run(["git", "pull"], cwd="emails")
-    except Exception:
-        subprocess.run(["git", "clone", "https://github.com/lithekod/emails.git"])
-
-    return "Emails updated successfully", 200
-
-
 @app.teardown_appcontext
 def close_connection(e):
     db = getattr(g, "_database", None)
