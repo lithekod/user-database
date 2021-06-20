@@ -7,10 +7,11 @@ SELECT_MEMBER_ID = "SELECT id FROM member"
 SELECT_LINK_WITH_URL = "SELECT * FROM link WHERE url=?"
 SELECT_LINK_MEMBERID_LINK = "SELECT member_id, url FROM link"
 SELECT_MEMBER_WITH_ID = "SELECT * FROM member WHERE id=?"
-SELECT_MEMBER_ACTIVE = "SELECT * FROM member\
-            WHERE strftime('%s', CURRENT_TIMESTAMP)\
-            - strftime('%s', renewed) < 180*24*3600"
-SELECT_MEMBER_INACTIVE = SELECT_MEMBER_ACTIVE.replace("<", ">=")
+SELECT_MEMBER_ACTIVE = " ".join([
+    "SELECT * FROM member",
+    "WHERE strftime('%Y', renewed) = strftime('%Y', CURRENT_TIMESTAMP)",
+])
+SELECT_MEMBER_INACTIVE = SELECT_MEMBER_ACTIVE.replace("=", "!=")
 SELECT_MEMBER_SUBSCRIBED = "SELECT * FROM member WHERE receive_email=1"
 SELECT_TOKEN_WITH_ID = "SELECT * FROM token WHERE id=?"
 
