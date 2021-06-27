@@ -15,7 +15,7 @@ sendRequest("/members/", new URLSearchParams([["id", member_id]]))
         emailField.value = json.email;
         joinedField.value = json.joined.split(" ")[0];
         renewedField.value = json.renewed.split(" ")[0];
-        subscribedField.textContent = json.receive_email === 1 ? "yes" : "no";
+        subscribedField.textContent = json.subscribed === 1 ? "yes" : "no";
 
         let linkList = document.getElementById("link-list");
         Object.entries(json.links).forEach(elem => {
@@ -51,9 +51,9 @@ function changeField(field, value, onsuccess=function(){}) {
 
 subscribedField.onclick = function() {
     if (subscribedField.textContent === "no") {
-        changeField("receive_email", "1", () => subscribedField.textContent = "yes");
+        changeField("subscribed", "1", () => subscribedField.textContent = "yes");
     } else {
-        changeField("receive_email", "0", () => subscribedField.textContent = "no");
+        changeField("subscribed", "0", () => subscribedField.textContent = "no");
     }
 
     return false;
