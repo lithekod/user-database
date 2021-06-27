@@ -1,7 +1,19 @@
-/*
-Member table
-This table contains all of the information we store on members.
-*/
+/**
+ * Version table
+ * Contains one value which specifies the database version.
+ */
+CREATE TABLE version
+(
+    version  INT  NOT NULL
+);
+
+/* Set the current database version */
+INSERT INTO version VALUES (0);
+
+/**
+ * Member table
+ * This table contains all of the information we store on members.
+ */
 CREATE TABLE member
 (
     id             VARCHAR(10)  PRIMARY KEY,
@@ -12,23 +24,26 @@ CREATE TABLE member
     receive_email  BOOLEAN      NOT NULL
 );
 
-/*
-Action table
-The id specifies what a action should do:
-    DELETE - Removes a member from the database.
-    RENEW - Sets the renewed status of the member to the current date.
-    SHOW - Provides a json string with one of the members information.
-    UNSUBSCRIBE - Sets the receive_email status to false.
-*/
+/**
+ * Action table
+ * The id specifies what a action should do:
+ *     SHOW - Provides a json string with one of the members information.
+ *     RENEW - Sets the renewed status of the member to the current date.
+ *     DELETE - Removes a member from the database.
+ *     UNSUBSCRIBE - Sets the receive_email status to false.
+ */
 CREATE TABLE action
 (
     id  VARCHAR(10) PRIMARY KEY
 );
 
-/*
-Link table
-Spcifies the active links which can be accessed by a member.
-*/
+/* Insert the default actions */
+INSERT INTO action VALUES ("SHOW"), ("RENEW"), ("DELETE"), ("UNSUBSCRIBE");
+
+/**
+ * Link table
+ * Spcifies the active links which can be accessed by a member.
+ */
 CREATE TABLE link
 (
     member_id  VARCHAR(10)  NOT NULL,
@@ -40,10 +55,10 @@ CREATE TABLE link
     FOREIGN KEY (action_id) REFERENCES action(id)
 );
 
-/*
-Token table
-These are tokens used for authentication with the server.
-*/
+/**
+ * Token table
+ * These are tokens used for authentication with the server.
+ */
 CREATE TABLE token
 (
     id        VARCHAR(32)  PRIMARY KEY,
