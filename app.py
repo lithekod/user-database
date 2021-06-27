@@ -22,7 +22,7 @@ from flask import url_for
 from google.oauth2 import id_token as token_auth
 from google.auth.transport import requests
 
-from queries import *
+from db.queries import *
 from util import *
 
 app = Flask(__name__)

@@ -41,7 +41,7 @@ def init_db():
     Call this function once when setting up the server.
     """
     db = get_db()
-    with current_app.open_resource("schema.sql", mode="r") as f:
+    with current_app.open_resource("db/schema.sql", mode="r") as f:
         db.cursor().executescript(f.read())
 
     db.executemany("INSERT INTO action VALUES (?)", [(i,) for i in current_app.config["ACTIONS"]])

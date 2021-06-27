@@ -1,9 +1,0 @@
-#!/bin/bash
-if [[ -z "$1" ]]; then
-    read -sp 'Server password: ' password
-    echo
-else
-    password=$1
-fi
-
-curl -u :$password 'https://lithekod.lysator.liu.se/metrics/' | python3 -m json.tool
