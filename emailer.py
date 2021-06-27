@@ -49,7 +49,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
     deadline = datetime.fromtimestamp(timestamp + 365 / 2 * 24 * 3600).strftime("%Y-%m-%d")
 
     plain = html2text(html)
-    for liu_id, name, receiver_email, joined, renewed, receive_info in receivers:
+    for liu_id, name, receiver_email, joined, renewed, subscribed in receivers:
         delete_link = try_construct_link(liu_id, "DELETE", links)
         renew_link = try_construct_link(liu_id, "RENEW", links)
         show_link = try_construct_link(liu_id, "SHOW", links)
@@ -66,7 +66,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
             "email": receiver_email,
             "joined": joined,
             "renewed": renewed,
-            "receive_info": receive_info,
+            "subscribed": subscribed,
             "delete_link": delete_link,
             "renew_link": renew_link,
             "show_link": show_link,

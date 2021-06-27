@@ -16,12 +16,12 @@ INSERT INTO version VALUES (0);
  */
 CREATE TABLE member
 (
-    id             VARCHAR(10)  PRIMARY KEY,
-    name           VARCHAR(64)  NOT NULL,
-    email          VARCHAR(64)  NOT NULL,
-    joined         TIME         NOT NULL,
-    renewed        TIME         NOT NULL,
-    receive_email  BOOLEAN      NOT NULL
+    id          VARCHAR(10)  PRIMARY KEY,
+    name        VARCHAR(64)  NOT NULL,
+    email       VARCHAR(64)  NOT NULL,
+    joined      TIME         NOT NULL,
+    renewed     TIME         NOT NULL,
+    subscribed  BOOLEAN      NOT NULL
 );
 
 /**
@@ -30,7 +30,7 @@ CREATE TABLE member
  *     SHOW - Provides a json string with one of the members information.
  *     RENEW - Sets the renewed status of the member to the current date.
  *     DELETE - Removes a member from the database.
- *     UNSUBSCRIBE - Sets the receive_email status to false.
+ *     UNSUBSCRIBE - Sets the subscribed status to false.
  */
 CREATE TABLE action
 (

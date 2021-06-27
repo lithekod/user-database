@@ -129,7 +129,7 @@ def is_authorized():
     return "Authorized", 200
 
 
-def add_member(liuid, name, email, joined, receive_email):
+def add_member(liuid, name, email, joined, subscribed):
     """
     Add a member to the database.
     All arguments has to be provided and properly formatted.
@@ -152,11 +152,11 @@ def add_member(liuid, name, email, joined, receive_email):
 
     joined = datetime.datetime.strptime(joined, "%Y-%m-%d")
 
-    if not is_bool(receive_email):
-        return err_msg("Invalid receive_email (0 or 1 required)")
+    if not is_bool(subscribed):
+        return err_msg("Invalid subscribed (0 or 1 required)")
 
     try:
-        modify_db(INSERT_NEW_MEMBER, (liuid, name, email, joined, receive_email))
+        modify_db(INSERT_NEW_MEMBER, (liuid, name, email, joined, subscribed))
     except sqlite3.Error as e:
         return err_msg(e.args[0])
 
@@ -243,7 +243,7 @@ def handle_link(link):
     member_id, action_id, url, created  = link
 
     member = query_db(SELECT_MEMBER_WITH_ID, (member_id,), True)
-    liuid, name, email, joined, renewed, receive_email = member
+    liuid, name, email, joined, renewed, subscribed = member
 
     resp = render_template("gui/message.html", message="Unknown link")
 
@@ -288,7 +288,7 @@ def handle_add_member():
     args = request.args
 
     required_arguments = ["id", "name"]
-    optional_arguments = ["email", "joined", "receive_email"]
+    optional_arguments = ["email", "joined", "subscribed"]
     optional_default = ["{}@student.liu.se".format(args["id"]),
             datetime.date.today().isoformat(), "1"]
 
@@ -358,7 +358,7 @@ def handle_modify():
         "email": is_email,
         "joined": is_date,
         "renewed": is_date,
-        "receive_email": is_bool
+        "subscribed": is_bool
     }
 
     if args["field"] not in field_verification:

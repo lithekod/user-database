@@ -59,8 +59,8 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(app_get(f"{url}id=erima884&joined=20-5-1&"), 400)
         self.assertEqual(app_get(f"{url}id=erima884&joined=2020-5-1&"), 200)
 
-        self.assertEqual(app_get(f"{url}id=erima885&receive_email=yes&"), 400)
-        self.assertEqual(app_get(f"{url}id=erima885&receive_email=1&"), 200)
+        self.assertEqual(app_get(f"{url}id=erima885&subscribed=yes&"), 400)
+        self.assertEqual(app_get(f"{url}id=erima885&subscribed=1&"), 200)
 
     @with_app_context
     def test_metrics(self):
@@ -153,7 +153,7 @@ class TestValidation(unittest.TestCase):
                 "email": "liu@liu.se",
                 "joined": "1990-01-01",
                 "renewed": "2020-02-31",
-                "receive_email": "1"
+                "subscribed": "1"
             }
         )
 

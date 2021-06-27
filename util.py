@@ -71,14 +71,14 @@ def is_bool(b):
 
 
 def member_to_dict(member):
-    liuid, name, email, joined, renewed, receive_email = member
+    liuid, name, email, joined, renewed, subscribed = member
     return {
         "id": liuid,
         "name": name,
         "email": email,
         "joined": joined,
         "renewed": renewed,
-        "receive_email": receive_email
+        "subscribed": subscribed
     }
 
 
