@@ -8,7 +8,7 @@ CREATE TABLE version
 );
 
 /* Set the current database version */
-INSERT INTO version VALUES (0);
+INSERT INTO version VALUES (1);
 
 /**
  * Member table
