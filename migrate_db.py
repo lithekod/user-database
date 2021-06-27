@@ -10,7 +10,9 @@ def v1(db):
 
 # List of functions that migrate the database.
 # They return the resulting version number.
-migrations = []
+migrations = [
+    v1,
+]
 
 if __name__ == "__main__":
     with app.app_context():

@@ -11,7 +11,7 @@ if EMAILER_PID is not None:
 SERVER_URL = "localhost:5000"
 
 DATABASE_PATH = "/tmp/temp.db"
-DATABASE_VERSION = 0
+DATABASE_VERSION = 1
 ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
 STANDINGS_PATH = "aoc/aoc_standings.json"
