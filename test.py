@@ -63,6 +63,16 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(app_get(f"{url}id=erima885&subscribed=1&"), 200)
 
     @with_app_context
+    def test_database_migration(self):
+        """ Test to see if the database has been migrated correctly """
+        reset_db()
+        self.assertEqual(
+            app.config["DATABASE_VERSION"],
+            query_db("SELECT version FROM version", one=True)[0],
+            "Database version is different in config and schema."
+        )
+
+    @with_app_context
     def test_metrics(self):
         """ Test getting metrics about the database. """
         reset_db()
