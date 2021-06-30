@@ -24,7 +24,7 @@ will show up on the website.
 
 If, for some reason, you want to access the database from the commandline, you
 can use the API. This table only provides the endpoints, not the arguments
-required. See #22.
+required. See [#22](https://github.com/lithekod/user-database/issues/22).
 
 | Endpoint          | Description                            |
 |-------------------|----------------------------------------|
