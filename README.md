@@ -1,11 +1,37 @@
 # User database
-This is the software that runs the LiTHe kod user database.
+
+This is LiTHe kod's user database.
+
+## Getting started
+
+```sh
+git clone git@github.com:lithekod/user-database.git
+cd user-database
+git clone git@github.com:lithekod/emails.git
+python3 -m venv venv
+. venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Using the database
+
+All of the functionality is available at [the
+website](https://lithekod.lysator.liu.se). To add new email templates, simply
+push them to the [emails](https://github.com/lithekod/emails) repo and they
+will show up on the website.
 
 ## API
 
-| Endpoint       | Description             | Example                                |
-|----------------|-------------------------|----------------------------------------|
-| `/<link>`      | Access generated links  | `URL/DELETE_fjU7y5LNwS9Ewn08AjUTWjWip` |
-| `/add_member/` | Add members to database | `curl -u :SECRET_KEY 'URL/add_member/?id=liuid123&name=Per%20Encode&email=id%40liu.se&joined=2020-01-01&receive_email=1'` |
-| `/metrics/`    | Get database metrics    | `curl -u :SECRET_KEY URL/metrics/` |
-| `/email_members/` | Send emails to members | `curl -u :SECRET_KEY 'URL/email_members/?subject=Hello+There&template=email_draft&receivers=default'` |
+If, for some reason, you want to access the database from the commandline, you
+can use the API. This table only provides the endpoints, not the arguments
+required. See #22.
+
+| Endpoint          | Description                            |
+|-------------------|----------------------------------------|
+| `/<link>`         | Access generated links                 |
+| `/add_member/`    | Add member to database                 |
+| `/modify/`        | Modify member data                     |
+| `/email_members/` | Send emails to members                 |
+| `/email_list/`    | Get an email list                      |
+| `/members/`       | Get all or individual members          |
+| `/member_count/`  | Get number of total and active members |
