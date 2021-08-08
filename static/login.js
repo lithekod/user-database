@@ -24,7 +24,6 @@ function onSignIn(googleUser) {
                 infoText.textContent = text;
                 gapi.auth2.getAuthInstance().signOut();
             } else if (resp.status === 200) {
-                document.cookie = "auth=" + text + ";max-age=21600;path=/";
                 returnFromLogin();
             }
         });

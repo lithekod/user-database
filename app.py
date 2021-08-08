@@ -18,6 +18,8 @@ from flask import jsonify
 from flask import request
 from flask import render_template
 from flask import url_for
+from flask import session
+from flask import redirect
 
 from google.oauth2 import id_token as token_auth
 from google.auth.transport import requests
@@ -32,45 +34,35 @@ app.config.from_envvar("DATABASE_CONFIG", silent=True)
 
 from db import *
 
-def admin_only(f):
+def admin_only(endpoint):
     """
     Wraps endpoint so that it will require authorization.
     Authorization is done using either a secret key with basic
     authorization, where the username is empty. Or, using a
     bearer token received from the /login/ endpoint.
     """
-    @wraps(f)
+    @wraps(endpoint)
     def decorated_fn(*args, **kwargs):
 
-        if app.config["SECRET_KEY"] == "dev":
-            return f(*args, **kwargs)
+        if "authorized" in session:
+            return endpoint(*args, **kwargs)
 
-        now = datetime.datetime.now().timestamp()
-        auth = request.headers["Authorization"].split(" ")
+        try:
+            auth = request.headers["Authorization"].split(" ")
+        except:
+            return redirect("/gui/login/")
 
         if len(auth) != 2:
             return "Invalid authorization. Try reloading.", 401
 
-        auth_type, token = auth
-        if auth_type == "Bearer":
-            tok = query_db(SELECT_TOKEN_WITH_ID, (token,), one=True)
-
-            if tok is None:
-                return "Unauthorized", 401
-
-            token_id, email, issued = tok
-            issued = datetime.datetime.fromisoformat(issued).timestamp()
-
-            if issued + 21600 < now:
-                return "Unauthorized", 401
-
-        elif auth_type == "Basic":
+        auth_type, _ = auth
+        if auth_type == "Basic":
             if request.authorization["password"] != app.config["SECRET_KEY"]:
                 return "Unauthorized token", 401
         else:
             return "Unknown auth type", 401
 
-        return f(*args, **kwargs)
+        return endpoint(*args, **kwargs)
 
     return decorated_fn
 
@@ -81,10 +73,11 @@ def login():
     Log in a specific user. To log in, POST a json with a google oauth2_token.
     The token must have been received from logging in to the LiTHe kod database
     app and the user must have logged in with a @lithekod.se email.
-
-    This endpoint returns a bearer token that is active for 6 hours after
-    being issued.
     """
+    if app.config["SECRET_KEY"] == "dev":
+        session["authorized"] = True
+        return "Logged in", 200
+
     token = request.get_json()["token"]
 
     CLIENT_ID = "235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
@@ -108,12 +101,9 @@ def login():
         if idinfo["email"] not in valid_emails:
             return "Invalid user", 401
 
-        expiration = now + datetime.timedelta(hours=6).seconds
-        session_token = random_string(32)
+        session["authorized"] = True
 
-        modify_db(INSERT_NEW_TOKEN, (session_token, idinfo["email"]))
-
-        return session_token, 200
+        return "Logged in", 200
 
     except Exception as e:
         return "Login failed: {}".format(e), 401
@@ -503,26 +493,31 @@ def index():
 
 
 @app.route("/gui/add_member/")
+@admin_only
 def gui_add_member():
     return render_template("gui/add_member.html")
 
 
 @app.route("/gui/login/")
 def gui_login():
-    return render_template("gui/login.html")
+    return render_template("gui/login.html",
+            development=app.config["SECRET_KEY"] == "dev")
 
 
 @app.route("/gui/manage_members/")
+@admin_only
 def gui_manage_members():
     return render_template("gui/member_list.html")
 
 
 @app.route("/gui/manage_members/<member_id>")
+@admin_only
 def gui_edit_member(member_id):
     return render_template("gui/edit_member.html", member_id=member_id)
 
 
 @app.route("/gui/send_emails/")
+@admin_only
 def gui_send_emails():
     # Get a list of all files in the "emails" directory.
     files = subprocess.run(
@@ -547,6 +542,7 @@ def gui_send_emails():
 
 
 @app.route("/gui/emails/")
+@admin_only
 def gui_view_email():
     if "path" not in request.args:
         return "No path specified", 400
