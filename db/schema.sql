@@ -8,7 +8,7 @@ CREATE TABLE version
 );
 
 /* Set the current database version */
-INSERT INTO version VALUES (1);
+INSERT INTO version VALUES (2);
 
 /**
  * Member table
@@ -53,15 +53,4 @@ CREATE TABLE link
     PRIMARY KEY (member_id, action_id),
     FOREIGN KEY (member_id) REFERENCES member(id),
     FOREIGN KEY (action_id) REFERENCES action(id)
-);
-
-/**
- * Token table
- * These are tokens used for authentication with the server.
- */
-CREATE TABLE token
-(
-    id        VARCHAR(32)  PRIMARY KEY,
-    owner     VARCHAR(64)  NOT NULL,
-    issued    TIME         NOT NULL
 );
