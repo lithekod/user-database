@@ -8,11 +8,17 @@ def v1(db):
     db.execute("ALTER TABLE member RENAME COLUMN receive_email TO subscribed")
     return 1
 
+def v2(db):
+    """ Update the database from v1 to v2 """
+    db.execute("DROP TABLE token")
+    return 2
+
 # Dict of functions that migrate the database.
 # The functions return the resulting version number, allowing us to reach the
 # latest version by chaining upgrades together.
 migrations = {
     0: v1,
+    1: v2,
 }
 
 if __name__ == "__main__":
