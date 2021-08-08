@@ -36,6 +36,7 @@ def app_get(path, get_data=False):
     Return the result of getting an endpoint from app.
     """
     with app.test_client() as t:
+        t.post("/login/")
         resp = t.get(path)
         return resp.data.decode() if get_data else resp.status_code
 
