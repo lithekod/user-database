@@ -8,6 +8,16 @@
 
 <script src="{{ url_for("static", filename="login.js") }}"></script>
 
+<script>
+    {% if development %}
+
+    fetch("/login/", { method: "POST" })
+        .then(resp => resp.ok && returnFromLogin())
+        .catch(e => console.error(e));
+
+    {% endif %}
+</script>
+
 {% endblock %}
 
 
