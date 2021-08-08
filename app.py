@@ -12,6 +12,7 @@ import emails
 from os import environ, kill
 
 from functools import wraps
+from urllib.parse import quote_plus
 
 from flask import Flask
 from flask import jsonify
@@ -39,7 +40,7 @@ def admin_only(endpoint):
     Wraps endpoint so that it will require authorization.
     Authorization is done using either a secret key with basic
     authorization, where the username is empty. Or, using a
-    bearer token received from the /login/ endpoint.
+    session received from the /login/ endpoint.
     """
     @wraps(endpoint)
     def decorated_fn(*args, **kwargs):
@@ -50,7 +51,7 @@ def admin_only(endpoint):
         try:
             auth = request.headers["Authorization"].split(" ")
         except:
-            return redirect("/gui/login/")
+            return redirect(f"/gui/login/?return-to={quote_plus(request.path)}")
 
         if len(auth) != 2:
             return "Invalid authorization. Try reloading.", 401
