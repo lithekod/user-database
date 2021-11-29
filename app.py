@@ -609,8 +609,6 @@ def aoc_leaderboard():
     contestants = []
     for member_id in standings_json["members"]:
         m = standings_json["members"][member_id]
-        if m["id"] == "637041":
-            continue
         if m["name"] is not None:
             contestants.append((int(m["stars"]), int(m["local_score"]), m["name"]))
         else:
