@@ -35,6 +35,7 @@ app.config.from_envvar("DATABASE_CONFIG", silent=True)
 
 from db import *
 
+
 def admin_only(endpoint):
     """
     Wraps endpoint so that it will require authorization.
@@ -42,6 +43,7 @@ def admin_only(endpoint):
     authorization, where the username is empty. Or, using a
     session received from the /login/ endpoint.
     """
+
     @wraps(endpoint)
     def decorated_fn(*args, **kwargs):
 
@@ -81,7 +83,9 @@ def login():
 
     token = request.get_json()["token"]
 
-    CLIENT_ID = "235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
+    CLIENT_ID = (
+        "235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
+    )
 
     try:
         idinfo = token_auth.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
@@ -126,8 +130,9 @@ def add_member(liuid, name, email, joined, subscribed):
     All arguments has to be provided and properly formatted.
     Return a tuple with a boolean and a string (success, message).
     """
+
     def err_msg(msg):
-        """ Return a informative error message. """
+        """Return a informative error message."""
         return False, f"Failed to add user with id: {liuid} - {msg}."
 
     liuid = liuid.lower()
@@ -189,7 +194,7 @@ def get_links():
     for liuid, link in query_db(SELECT_LINK_MEMBERID_LINK):
         if liuid not in table:
             table[liuid] = {}
-        table[liuid][link[:link.find("_")]] = link
+        table[liuid][link[: link.find("_")]] = link
 
     return table
 
@@ -231,7 +236,7 @@ def handle_link(link):
     if link is None:
         return "Invalid link. It might have been used up..", 404
 
-    member_id, action_id, url, created  = link
+    member_id, action_id, url, created = link
 
     member = query_db(SELECT_MEMBER_WITH_ID, (member_id,), True)
     liuid, name, email, joined, renewed, subscribed = member
@@ -253,7 +258,9 @@ def handle_link(link):
             message = "<p style='margin: 0;'>\
                            End membership? (Cannot be reversed)\
                        </p>\
-                       <a href=\"/{}?confirm=true\">Confirm</a>".format(url)
+                       <a href=\"/{}?confirm=true\">Confirm</a>".format(
+                url
+            )
         else:
             modify_db(DELETE_LINK_WITH_MEMBER_ID, (liuid,))
             modify_db(DELETE_MEMBER_WITH_ID, (liuid,))
@@ -280,8 +287,11 @@ def handle_add_member():
 
     required_arguments = ["id", "name"]
     optional_arguments = ["email", "joined", "subscribed"]
-    optional_default = ["{}@student.liu.se".format(args["id"]),
-            datetime.date.today().isoformat(), "1"]
+    optional_default = [
+        "{}@student.liu.se".format(args["id"]),
+        datetime.date.today().isoformat(),
+        "1",
+    ]
 
     member_args = []
 
@@ -305,14 +315,19 @@ def handle_add_member():
 
         if app.config["EMAIL_PASSWORD"] != "dev":
 
-            html = emails.format_file("emails/general/welcome.tpl", "emails/template.html")
+            html = emails.format_file(
+                "emails/general/welcome.tpl", "emails/template.html"
+            )
             with open("emailpickle", "bw") as f:
-                pickle.dump((
-                    get_mailing_list(args["id"]),
-                    "Welcome to LiTHe kod!",
-                    html,
-                    get_links()
-                ), f)
+                pickle.dump(
+                    (
+                        get_mailing_list(args["id"]),
+                        "Welcome to LiTHe kod!",
+                        html,
+                        get_links(),
+                    ),
+                    f,
+                )
 
             kill(app.config["EMAILER_PID"], signal.SIGUSR1)
 
@@ -338,7 +353,7 @@ def handle_modify():
         return "No new specified.", 400
 
     def err_msg(msg):
-        """ Return a informative error message. """
+        """Return a informative error message."""
         return f"Failed to modify user with id: {args['id']} - {msg}.", 400
 
     if query_db(SELECT_MEMBER_WITH_ID, (args["id"],), True) is None:
@@ -349,15 +364,18 @@ def handle_modify():
         "email": is_email,
         "joined": is_date,
         "renewed": is_date,
-        "subscribed": is_bool
+        "subscribed": is_bool,
     }
 
     if args["field"] not in field_verification:
         return err_msg(f"No such field '{args['field']}'")
 
     if not field_verification[args["field"]](args["new"]):
-        return err_msg("Badly formatted value '{}' for field '{}'"
-                .format(args['new'], args['field']))
+        return err_msg(
+            "Badly formatted value '{}' for field '{}'".format(
+                args["new"], args["field"]
+            )
+        )
 
     try:
         # FIXME: I no longer think this is a good idea.
@@ -369,7 +387,10 @@ def handle_modify():
     except sqlite3.Error as e:
         return err_msg(e.args[0])
 
-    return f"Successfully set '{args['field']}' to '{args['new']}' for '{args['id']}'", 200
+    return (
+        f"Successfully set '{args['field']}' to '{args['new']}' for '{args['id']}'",
+        200,
+    )
 
 
 @app.route("/members/")
@@ -405,10 +426,12 @@ def get_member_count():
     Return information about how many members there are.
     This endpoint does not require admin privileges.
     """
-    return jsonify({
-        "total_members": len(query_db(SELECT_MEMBER)),
-        "active_members": len(query_db(SELECT_MEMBER_ACTIVE)),
-    })
+    return jsonify(
+        {
+            "total_members": len(query_db(SELECT_MEMBER)),
+            "active_members": len(query_db(SELECT_MEMBER_ACTIVE)),
+        }
+    )
 
 
 def get_mailing_list(receivers):
@@ -501,8 +524,9 @@ def gui_add_member():
 
 @app.route("/gui/login/")
 def gui_login():
-    return render_template("gui/login.html",
-            development=app.config["SECRET_KEY"] == "dev")
+    return render_template(
+        "gui/login.html", development=app.config["SECRET_KEY"] == "dev"
+    )
 
 
 @app.route("/gui/manage_members/")
@@ -521,18 +545,23 @@ def gui_edit_member(member_id):
 @admin_only
 def gui_send_emails():
     # Get a list of all files in the "emails" directory.
-    files = subprocess.run(
-                "git ls-tree -r --name-only HEAD".split(),
-                cwd="emails",
-                capture_output=True
-            ).stdout.decode().split()
+    files = (
+        subprocess.run(
+            "git ls-tree -r --name-only HEAD".split(), cwd="emails", capture_output=True
+        )
+        .stdout.decode()
+        .split()
+    )
 
     def last_changed(f):
-        """ Returns the unix timestamp of the last change to the file """
-        return int(subprocess.run(f"git log -1 --format=%at -- {f}".split(),
-                                  cwd="emails",
-                                  capture_output=True
-                   ).stdout.decode())
+        """Returns the unix timestamp of the last change to the file"""
+        return int(
+            subprocess.run(
+                f"git log -1 --format=%at -- {f}".split(),
+                cwd="emails",
+                capture_output=True,
+            ).stdout.decode()
+        )
 
     templates = [f for f in files if "/" in f and f.endswith(".tpl")]
     templates.sort(reverse=True, key=lambda f: last_changed(f))
@@ -554,16 +583,25 @@ def gui_view_email():
 
 @app.route("/leaderboard/")
 def aoc_leaderboard():
-    """ Get the current standings in AoC. """
-    elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(app.config["STANDINGS_PATH"])
+    """Get the current standings in AoC."""
+    CACHE_INTERVAL = 20 * 60
+    try:
+        elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(
+            app.config["STANDINGS_PATH"]
+        )
+    except:
+        elapsed = CACHE_INTERVAL + 1
 
-    #if elapsed > 20 * 60:
-    #    import requests
-    #    data = { "session": ""}
-    #    result = requests.get("https://adventofcode.com/2020/leaderboard/private/view/637041.json", cookies=data)
-    #    with open(app.config["STANDINGS_PATH"], "w") as f:
-    #        f.write(result.text)
+    if elapsed > 20 * 60:
+        import requests
 
+        data = {"session": app.config["AOC_SESSION"]}
+        result = requests.get(
+            "https://adventofcode.com/2021/leaderboard/private/view/272152.json",
+            cookies=data,
+        )
+        with open(app.config["STANDINGS_PATH"], "w") as f:
+            f.write(result.text)
 
     with open(app.config["STANDINGS_PATH"], "r") as f:
         standings_json = json.loads(f.read())
@@ -576,7 +614,9 @@ def aoc_leaderboard():
         if m["name"] is not None:
             contestants.append((int(m["stars"]), int(m["local_score"]), m["name"]))
         else:
-            contestants.append((int(m["stars"]), int(m["local_score"]), "Anon." + m["id"]))
+            contestants.append(
+                (int(m["stars"]), int(m["local_score"]), "Anon." + m["id"])
+            )
 
     sorting = lambda x: x[0] * 1000 + x[1]
     raised = sum(map(lambda x: x[0] * 10, contestants))
@@ -586,10 +626,13 @@ def aoc_leaderboard():
             if contestants[i][2] in app.config["INVALID_CONTESTANTS"]:
                 del contestants[i]
 
-    placements = [(x[0], x[1][0], x[1][2]) for x in enumerate(sorted(contestants, key=sorting, reverse=True))]
-    return render_template("aoc_leaderboard.html",
-                           raised=raised,
-                           contestants=placements)
+    placements = [
+        (x[0], x[1][0], x[1][2])
+        for x in enumerate(sorted(contestants, key=sorting, reverse=True))
+    ]
+    return render_template(
+        "aoc_leaderboard.html", raised=raised, contestants=placements
+    )
 
 
 if __name__ == "__main__":

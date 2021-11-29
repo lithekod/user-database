@@ -14,5 +14,6 @@ DATABASE_PATH = "/tmp/temp.db"
 DATABASE_VERSION = 2
 ACTIONS = ["SHOW", "RENEW", "DELETE", "UNSUBSCRIBE"]
 
+AOC_SESSION = ""
 STANDINGS_PATH = "aoc/aoc_standings.json"
 INVALID_CONTESTANTS = set()
