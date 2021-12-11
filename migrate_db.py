@@ -4,14 +4,16 @@ from app import app
 from db import get_db
 
 def v1(db):
-    """ Update the database from v0 to v1 """
+    """Update the database from v0 to v1"""
     db.execute("ALTER TABLE member RENAME COLUMN receive_email TO subscribed")
     return 1
 
+
 def v2(db):
-    """ Update the database from v1 to v2 """
+    """Update the database from v1 to v2"""
     db.execute("DROP TABLE token")
     return 2
+
 
 # Dict of functions that migrate the database.
 # The functions return the resulting version number, allowing us to reach the
