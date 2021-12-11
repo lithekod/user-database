@@ -49,13 +49,13 @@ https://lithekod.lysator.liu.se/SHOW_hahu928bo
 
 Add a member to to database.
 
-| Parameters   | Description         | Required |
-| ------------ | ------------------- | :------: |
-| `id`         | Liu-id              |   yes    |
-| `name`       | Full name           |   yes    |
-| `email`      | Email               |    no    |
-| `joined`     | ISO-Date            |    no    |
-| `subscribed` | Subscription status |    no    |
+| Parameters   | Description                  | Required |
+| ------------ | ---------------------------- | :------: |
+| `id`         | Liu-id                       |   yes    |
+| `name`       | Full name                    |   yes    |
+| `email`      | Email                        |    no    |
+| `joined`     | ISO-Date (YYYY-mm-dd)        |    no    |
+| `subscribed` | Subscription status (0 or 1) |    no    |
 
 #### Example
 
