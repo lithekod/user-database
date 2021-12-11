@@ -2,15 +2,12 @@
 
 This is LiTHe kod's user database.
 
-## Getting started
+## Quickstart
 
 ```sh
 git clone git@github.com:lithekod/user-database.git
 cd user-database
-git clone git@github.com:lithekod/emails.git
-python3 -m venv venv
-. venv/bin/activate
-pip install -r requirements.txt
+make
 ```
 
 ## Using the database
