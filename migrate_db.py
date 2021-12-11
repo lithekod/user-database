@@ -1,7 +1,8 @@
 # This script updates the database to the latest version.
-# It assumes the database has been initialized.
+import os
 from app import app
-from db import get_db
+from db import get_db, init_db
+
 
 def v1(db):
     """Update the database from v0 to v1"""
@@ -25,6 +26,10 @@ migrations = {
 
 if __name__ == "__main__":
     with app.app_context():
+
+        if not os.path.isfile(app.config["DATABASE_PATH"]):
+            init_db()
+
         db = get_db()
 
         version = db.execute("SELECT version FROM version").fetchone()[0]
