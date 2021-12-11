@@ -12,7 +12,7 @@ make
 
 ## Using the database
 
-All of the functionality is available at [the
+Most of the functionality is available at [the
 website](https://lithekod.lysator.liu.se). To add new email templates, simply
 push them to the [emails](https://github.com/lithekod/emails) repo and they
 will show up on the website.
@@ -60,7 +60,7 @@ Add a member to to database.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY https://lithekod.lysator.liu.se/add_member/?id=liuid123&name=Lius+Idus
+$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/add_member/?id=liuid123&name=Lius+Idus"
 Successfully added user with id: liuid123.
 ```
 
@@ -77,6 +77,65 @@ Modify member data. The modifiable fields are the parameters to `/add_member/`.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY https://lithekod.lysator.liu.se/modify/?id=liuid123&field=name&new=Blargh
+$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/modify/?id=liuid123&field=name&new=Blargh"
 Successfully set 'name' to 'Blargh' for 'liuid123'
+```
+
+### `/email_members/`
+
+Send emails to members. Receivers is one of `default`, `all`, `inactive` or a
+space separated list of liu-ids.
+
+| Parameters  | Description       | Required |
+| ----------- | ----------------- | :------: |
+| `receivers` | Receivers         |   yes    |
+| `subject`   | Email subject     |   yes    |
+| `template`  | The email to send |   yes    |
+
+#### Example
+
+```sh
+$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/email_members/?receivers=liuid123&subject=test&template=general/welcome.tpl"
+Emails are being sent!
+```
+
+### `/email_list/`
+
+Get an email list. Receivers are the same as for `/email_members/`.
+
+| Parameters  | Description | Required |
+| ----------- | ----------- | :------: |
+| `receivers` | Receivers   |   yes    |
+
+#### Example
+
+```sh
+$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/email_list/?receivers=all"
+[...] # A JSON list of the users, the format is unspecified.
+```
+
+### `/members/`
+
+Get all or individual members. Basically a dump of the database.
+
+| Parameters | Description | Required |
+| ---------- | ----------- | :------: |
+| `id`       | Liu-id      |    no    |
+
+#### Example
+
+```sh
+$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/members/"
+[...] # A JSON list of the users and the links
+```
+
+### `/member_count/`
+
+Get number of total and active members. Does not require authentication.
+
+#### Example
+
+```sh
+$ curl "https://lithekod.lysator.liu.se/member_count/"
+{"active_members":25,"total_members":110}
 ```
