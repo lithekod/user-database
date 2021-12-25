@@ -592,16 +592,16 @@ def aoc_leaderboard():
     except:
         elapsed = CACHE_INTERVAL + 1
 
-    if elapsed > 20 * 60:
-        import requests
+    # if elapsed > 20 * 60:
+    #    import requests
 
-        data = {"session": app.config["AOC_SESSION"]}
-        result = requests.get(
-            "https://adventofcode.com/2021/leaderboard/private/view/272152.json",
-            cookies=data,
-        )
-        with open(app.config["STANDINGS_PATH"], "w") as f:
-            f.write(result.text)
+    #    data = {"session": app.config["AOC_SESSION"]}
+    #    result = requests.get(
+    #        "https://adventofcode.com/2021/leaderboard/private/view/272152.json",
+    #        cookies=data,
+    #    )
+    #    with open(app.config["STANDINGS_PATH"], "w") as f:
+    #        f.write(result.text)
 
     with open(app.config["STANDINGS_PATH"], "r") as f:
         standings_json = json.loads(f.read())
