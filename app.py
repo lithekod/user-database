@@ -249,7 +249,6 @@ def handle_link(link):
 
     elif action_id == "RENEW":
         modify_db(UPDATE_MEMBER_RENEW, (liuid,))
-        modify_db(DELETE_LINK_WITH_IDS, (liuid, action_id))
         message = "Your membership has been renewed!"
         resp = render_template("gui/message.html", message=message)
 
