@@ -13,6 +13,7 @@ from html2text import html2text
 
 from app import app
 
+
 def try_construct_link(liu_id, action, links):
     """
     Try to create a link to action for the member with liu_id.
@@ -44,9 +45,8 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
         current_time = datetime.now().strftime("%Y-%m-%dat%H:%M:%S")
         log_file = open("logs/emaillog_{}".format(current_time), "w")
 
-
     timestamp = datetime.now().timestamp()
-    deadline = datetime.fromtimestamp(timestamp + 365 / 2 * 24 * 3600).strftime("%Y-%m-%d")
+    deadline = datetime.fromtimestamp(timestamp + 30 * 24 * 3600).strftime("%Y-%m-%d")
 
     plain = html2text(html)
     for liu_id, name, receiver_email, joined, renewed, subscribed in receivers:
@@ -56,7 +56,9 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
         unsubscribe_link = try_construct_link(liu_id, "UNSUBSCRIBE", links)
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = formataddr((str(Header('LiTHe kod', 'utf-8')), app.config["EMAIL_ADDRESS"]))
+        message["From"] = formataddr(
+            (str(Header("LiTHe kod", "utf-8")), app.config["EMAIL_ADDRESS"])
+        )
         message["To"] = receiver_email
 
         kwargs = {
@@ -70,7 +72,7 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
             "delete_link": delete_link,
             "renew_link": renew_link,
             "show_link": show_link,
-            "unsubscribe_link": unsubscribe_link
+            "unsubscribe_link": unsubscribe_link,
         }
 
         formatted_plain = plain.format(**kwargs)
@@ -86,7 +88,9 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
             try:
                 context = ssl.create_default_context()
                 with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-                    server.login(app.config["EMAIL_ADDRESS"], app.config["EMAIL_PASSWORD"])
+                    server.login(
+                        app.config["EMAIL_ADDRESS"], app.config["EMAIL_PASSWORD"]
+                    )
                     server.sendmail(
                         app.config["EMAIL_ADDRESS"], receiver_email, message.as_string()
                     )
@@ -98,8 +102,11 @@ def send_mail(receivers, subject, html, links={}, interactive=False):
             except Exception as e:
                 print(e, file=log_file, flush=True)
                 if interactive:
-                    retry_message = "{}\nFailed sending mail to {} - retry? (Y/n/skip): "\
-                                    .format(e, liu_id)
+                    retry_message = (
+                        "{}\nFailed sending mail to {} - retry? (Y/n/skip): ".format(
+                            e, liu_id
+                        )
+                    )
                     ans = input(retry_message).lower()
 
                     if ans == "n":
@@ -148,21 +155,20 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Send emails to members")
 
-    parser.add_argument("-r", "--receivers",
-                        nargs=1,
-                        required=True,
-                        help="Either one of the values: 'default', 'all',\
-                              'inactive' or a space-separated list of liuids.")
+    parser.add_argument(
+        "-r",
+        "--receivers",
+        nargs=1,
+        required=True,
+        help="Either one of the values: 'default', 'all',\
+                              'inactive' or a space-separated list of liuids.",
+    )
 
-    parser.add_argument("-s", "--subject",
-                        nargs=1,
-                        required=True,
-                        help="Email subject")
+    parser.add_argument("-s", "--subject", nargs=1, required=True, help="Email subject")
 
-    parser.add_argument("-t", "--template",
-                        nargs=1,
-                        required=True,
-                        help="Email template")
+    parser.add_argument(
+        "-t", "--template", nargs=1, required=True, help="Email template"
+    )
 
     args = parser.parse_args()
 
