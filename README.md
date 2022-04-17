@@ -60,7 +60,7 @@ Add a member to to database.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/add_member/?id=liuid123&name=Lius+Idus"
+$ curl -u :SECRET_KEY "https://lithekod.lysator.liu.se/add_member/?id=liuid123&name=Lius+Idus"
 Successfully added user with id: liuid123.
 ```
 
@@ -77,7 +77,7 @@ Modify member data. The modifiable fields are the parameters to `/add_member/`.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/modify/?id=liuid123&field=name&new=Blargh"
+$ curl -u :SECRET_KEY "https://lithekod.lysator.liu.se/modify/?id=liuid123&field=name&new=Blargh"
 Successfully set 'name' to 'Blargh' for 'liuid123'
 ```
 
@@ -95,7 +95,7 @@ space separated list of liu-ids.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/email_members/?receivers=liuid123&subject=test&template=general/welcome.tpl"
+$ curl -u :SECRET_KEY "https://lithekod.lysator.liu.se/email_members/?receivers=liuid123&subject=test&template=general/welcome.tpl"
 Emails are being sent!
 ```
 
@@ -110,7 +110,7 @@ Get an email list. Receivers are the same as for `/email_members/`.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/email_list/?receivers=all"
+$ curl -u :SECRET_KEY "https://lithekod.lysator.liu.se/email_list/?receivers=all"
 [...] # A JSON list of the users, the format is unspecified.
 ```
 
@@ -125,7 +125,7 @@ Get all or individual members. Basically a dump of the database.
 #### Example
 
 ```sh
-$ curl -u :SECRECT_KEY "https://lithekod.lysator.liu.se/members/"
+$ curl -u :SECRET_KEY "https://lithekod.lysator.liu.se/members/"
 [...] # A JSON list of the users and the links
 ```
 
