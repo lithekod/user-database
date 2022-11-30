@@ -584,6 +584,7 @@ def gui_view_email():
 def aoc_leaderboard():
     """Get the current standings in AoC."""
     CACHE_INTERVAL = 20 * 60 # 20 Minutes
+    SEK_PER_STAR = 5
     try:
         elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(
             app.config["STANDINGS_PATH"]
@@ -616,7 +617,7 @@ def aoc_leaderboard():
             )
 
     sorting = lambda x: x[0] * 1000 + x[1]
-    raised = sum(map(lambda x: x[0] * 10, contestants))
+    raised = sum(map(lambda x: x[0] * SEK_PER_STAR, contestants))
 
     if "some" in request.args:
         for i in range(len(contestants) - 1, -1, -1):
