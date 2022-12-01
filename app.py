@@ -596,9 +596,11 @@ def aoc_leaderboard():
         import requests
 
         data = {"session": app.config["AOC_SESSION"]}
+        headers = {"User-Agent": "LiTHe kod/0.1.0 webb@lithekod.se https://lithekod.lysator.liu.se/leaderboard"}
         result = requests.get(
             "https://adventofcode.com/2022/leaderboard/private/view/1879790.json",
             cookies=data,
+            headers=headers,
         )
         with open(app.config["STANDINGS_PATH"], "w") as f:
             f.write(result.text)
