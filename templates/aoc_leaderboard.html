@@ -68,7 +68,11 @@
     <body>
         <div class="left-column">
             <h2 id='money'>Money raised</h2>
-            <p>We have raised <b>{{raised}}</b> sek so far!</p>
+            {% if max_raised %}
+              <p>We have reach our goal of raising <b>{{raised}}</b> sek!</p>
+            {% else %}
+              <p>We have raised <b>{{raised}}</b> sek so far!</p>
+            {% endif %}
             <div id='standings'>
                 {% if "some" in request.args %}
                     <h2>Standings (competition)</h2>

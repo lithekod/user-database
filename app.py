@@ -585,6 +585,7 @@ def aoc_leaderboard():
     """Get the current standings in AoC."""
     CACHE_INTERVAL = 20 * 60 # 20 Minutes
     SEK_PER_STAR = 5
+    MAX_RAISED = 7500
     try:
         elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(
             app.config["STANDINGS_PATH"]
@@ -620,6 +621,10 @@ def aoc_leaderboard():
 
     sorting = lambda x: x[0] * 1000 + x[1]
     raised = sum(map(lambda x: x[0] * SEK_PER_STAR, contestants))
+    max_raised = false
+    if raised >= MAX_RAISED:
+        max_raised = true
+        raised = MAX_RAISED
 
     if "some" in request.args:
         for i in range(len(contestants) - 1, -1, -1):
@@ -631,7 +636,10 @@ def aoc_leaderboard():
         for x in enumerate(sorted(contestants, key=sorting, reverse=True))
     ]
     return render_template(
-        "aoc_leaderboard.html", raised=raised, contestants=placements
+        "aoc_leaderboard.html",
+        raised=raised,
+        max_raised=max_raised,
+        contestants=placements
     )
 
 
