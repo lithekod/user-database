@@ -621,9 +621,9 @@ def aoc_leaderboard():
 
     sorting = lambda x: x[0] * 1000 + x[1]
     raised = sum(map(lambda x: x[0] * SEK_PER_STAR, contestants))
-    max_raised = false
+    max_raised = False
     if raised >= MAX_RAISED:
-        max_raised = true
+        max_raised = True
         raised = MAX_RAISED
 
     if "some" in request.args:
