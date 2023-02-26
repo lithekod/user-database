@@ -16,8 +16,9 @@ function onSignIn(googleUser) {
             "Content-Type": 'application/json'
         }),
         body: JSON.stringify({ token: googleUser.getAuthResponse().id_token })
-    }).then(resp => {
-        resp.text().then(text => {
+    })
+        .then(resp => resp.text())
+        .then(text => {
             if (resp.status === 401) {
                 let infoText = document.getElementById("info-text");
                 infoText.style = "";
@@ -27,5 +28,4 @@ function onSignIn(googleUser) {
                 returnFromLogin();
             }
         });
-    });
 }
