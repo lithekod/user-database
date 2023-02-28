@@ -16,9 +16,8 @@ function onSignIn(credentialResponse) {
             "Content-Type": 'application/json'
         }),
         body: JSON.stringify({ token: credentialResponse.credential })
-    })
-        .then(resp => resp.text())
-        .then(text => {
+    }).then(resp => {
+        resp.text().then(text => {
             if (resp.status === 401) {
                 let infoText = document.getElementById("info-text");
                 infoText.style = "";
@@ -28,4 +27,5 @@ function onSignIn(credentialResponse) {
                 returnFromLogin();
             }
         });
+    });
 }
