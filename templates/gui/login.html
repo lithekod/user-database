@@ -3,8 +3,7 @@
 
 {% block scripts %}
 
-<meta name="google-signin-client_id" content="235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com">
-<script src="https://apis.google.com/js/platform.js" defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script src="{{ url_for("static", filename="login.js") }}"></script>
 
@@ -23,7 +22,13 @@
 
 {% block content %}
 
-<div class="g-signin2" data-onsuccess="onSignIn"></div>
+<div
+    id="g_id_onload"
+    data-client_id="235722913299-vs78qd2rm2gpmp39gls54uii3ma8irp0.apps.googleusercontent.com"
+    data-callback="onSignIn"
+></div>
+<div class="g_id_signin" data-type="standard"></div>
+
 <p id="info-text" style="display: none;">Login failed</p>
 
 {% endblock %}
