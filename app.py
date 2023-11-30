@@ -586,25 +586,25 @@ def aoc_leaderboard():
     CACHE_INTERVAL = 20 * 60 # 20 Minutes
     SEK_PER_STAR = 5
     MAX_RAISED = 7500
-    # try:
-    #     elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(
-    #         app.config["STANDINGS_PATH"]
-    #     )
-    # except:
-    #     elapsed = CACHE_INTERVAL + 1
+    try:
+        elapsed = datetime.datetime.now().timestamp() - os.path.getmtime(
+            app.config["STANDINGS_PATH"]
+        )
+    except:
+        elapsed = CACHE_INTERVAL + 1
 
-    # if elapsed > 20 * 60:
-    #     import requests
+    if elapsed > 20 * 60:
+        import requests
 
-    #     data = {"session": app.config["AOC_SESSION"]}
-    #     headers = {"User-Agent": "LiTHe kod/0.1.0 webb@lithekod.se https://lithekod.lysator.liu.se/leaderboard"}
-    #     result = requests.get(
-    #         "https://adventofcode.com/2022/leaderboard/private/view/1879790.json",
-    #         cookies=data,
-    #         headers=headers,
-    #     )
-    #     with open(app.config["STANDINGS_PATH"], "w") as f:
-    #         f.write(result.text)
+        data = {"session": app.config["AOC_SESSION"]}
+        headers = {"User-Agent": "LiTHe kod/0.1.0 webb@lithekod.se https://lithekod.lysator.liu.se/leaderboard"}
+        result = requests.get(
+            "https://adventofcode.com/2023/leaderboard/private/view/1879790.json",
+            cookies=data,
+            headers=headers,
+        )
+        with open(app.config["STANDINGS_PATH"], "w") as f:
+            f.write(result.text)
 
     with open(app.config["STANDINGS_PATH"], "r") as f:
         standings_json = json.loads(f.read())
